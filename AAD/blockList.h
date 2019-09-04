@@ -52,7 +52,7 @@ class blockList
         }
         else {
             ++cur_block;
-            next_space = cur_block.begin(); // MIGHT HAVE ERROR .
+            next_space = cur_block->begin();
             last_space = cur_block->end();
         }
     }
@@ -72,8 +72,8 @@ public:
     // Go back and overwrite without deleting contents of blocks
     void rewind(){
         cur_block = data.begin();
-        next_space = cur_block.begin();
-        last_space = cur_block.end();
+        next_space = cur_block->begin();
+        last_space = cur_block->end();
     }
     
     // Save this point
@@ -238,7 +238,7 @@ public:
     // Returns iterator to next available slot for storage of an element
     iterator end()
     {
-        auto last_block = prev(data.end());
+        //auto last_block = prev(data.end()); // Why unused?
         return iterator(cur_block, next_space, cur_block->begin(), cur_block->end() );
     }
     

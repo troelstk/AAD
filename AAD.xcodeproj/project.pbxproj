@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		9FF2290A231D562E00EF06F1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9FF22907231D562E00EF06F1 /* main.cpp */; };
+		9FF2290E231F916900EF06F1 /* AAD.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9FF2290D231F916900EF06F1 /* AAD.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -23,6 +24,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		9F746E69231FA126006DE0C4 /* AAD.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AAD.h; sourceTree = "<group>"; };
+		9F746E6A231FB6A6006DE0C4 /* gaussians.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gaussians.h; sourceTree = "<group>"; };
 		9FF228FA231D55D400EF06F1 /* AAD */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AAD; sourceTree = BUILT_PRODUCTS_DIR; };
 		9FF22904231D562E00EF06F1 /* memoryConsumption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = memoryConsumption.h; sourceTree = "<group>"; };
 		9FF22905231D562E00EF06F1 /* number.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = number.h; sourceTree = "<group>"; };
@@ -30,6 +33,8 @@
 		9FF22907231D562E00EF06F1 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		9FF22908231D562E00EF06F1 /* blockList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = blockList.h; sourceTree = "<group>"; };
 		9FF22909231D562E00EF06F1 /* node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = node.h; sourceTree = "<group>"; };
+		9FF2290C231D57E600EF06F1 /* tape.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = tape.h; path = /Users/Troels/Dropbox/Uni/Speciale/AAD/AAD/tape.h; sourceTree = "<absolute>"; };
+		9FF2290D231F916900EF06F1 /* AAD.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = AAD.cpp; path = /Users/Troels/Dropbox/Uni/Speciale/AAD/AAD/AAD.cpp; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,12 +67,16 @@
 		9FF228FC231D55D400EF06F1 /* AAD */ = {
 			isa = PBXGroup;
 			children = (
+				9FF2290D231F916900EF06F1 /* AAD.cpp */,
+				9F746E69231FA126006DE0C4 /* AAD.h */,
+				9FF2290C231D57E600EF06F1 /* tape.h */,
 				9FF22908231D562E00EF06F1 /* blockList.h */,
 				9FF22907231D562E00EF06F1 /* main.cpp */,
 				9FF22904231D562E00EF06F1 /* memoryConsumption.h */,
 				9FF22909231D562E00EF06F1 /* node.h */,
 				9FF22905231D562E00EF06F1 /* number.h */,
 				9FF22906231D562E00EF06F1 /* trialFunction.h */,
+				9F746E6A231FB6A6006DE0C4 /* gaussians.h */,
 			);
 			path = AAD;
 			sourceTree = "<group>";
@@ -128,6 +137,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9FF2290E231F916900EF06F1 /* AAD.cpp in Sources */,
 				9FF2290A231D562E00EF06F1 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -141,7 +151,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -200,7 +210,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;

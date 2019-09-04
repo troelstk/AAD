@@ -17,96 +17,34 @@ using namespace std;
 
 class node {
     
-protected:
-    // Childs of node
-    vector<node*> arguments;
+    friend class Tape;
+    friend class number;
     
-    double myResult;
-    double myAdjoint = 0.0;
+    // Number of childs
+    const size_t n;
+    
+    double mAdjoint = 0;
+    
+    double* pDerivatives;
+    
+    double** pAdjPtrs;
 
 public:
-    virtual ~node() {};
-    
-    double result() {
-        return myResult;
-    };
+    // Initialize with n
+    node(const size_t N = 0) : n(N) { }
     
     double& adjoint() {
-        return myAdjoint;
+        return mAdjoint;
     }
     
-    void resetAdjoints() {
-        for( auto arg : arguments ) {
-            arg->resetAdjoints();
-            //cout << "reset adjoint of node with result " << myResult << endl;
+    void propagateOne()
+    {
+        // Return if zero childs or mAdjoint is 0
+        if ( !n || !mAdjoint) return;
+        for(size_t i = 0; i < n; ++i ) {
+            *(pAdjPtrs[i]) += pDerivatives[i] * mAdjoint;
         }
-        myAdjoint = 0.0;
     }
-    
-    virtual void propagateAdjoint() = 0;
-    
-};
-
-class plusNode : public node {
-public:
-    // Only instructs that a plusNode holds two child nodes
-    plusNode(node* left, node* right)
-    {
-        arguments.resize(2);
-        arguments[0] = left;
-        arguments[1] = right;
-        
-        // Eager evalutation
-        myResult = left->result() + right->result();
-    }
-    
-    void propagateAdjoint() override
-    {
-        //cout << "Adjoint is: " << myAdjoint << endl;
-        
-        arguments[0]->adjoint() += myAdjoint;
-        arguments[1]->adjoint() += myAdjoint;
-    }
-};
-
-class timesNode : public node {
-public:
-    // Only instructs that a timesNode holds two child nodes
-    timesNode(node* left, node* right)
-    {
-        arguments.resize(2);
-        arguments[0] = left;
-        arguments[1] = right;
-        
-        myResult = left->result() * right->result();
-    }
-    
-    void propagateAdjoint() override
-    {
-        //cout << "Adjoint " << myAdjoint << endl;
-        
-        arguments[0]->adjoint() += myAdjoint * arguments[1]->result();
-        arguments[1]->adjoint() += myAdjoint * arguments[0]->result();
-    }
-};
-
-class leaf : public node {
-    
-public:
-    
-    leaf(double val){
-        myResult = val;
-    }
-    
-    void setValue(double val) {
-        myResult = val;
-    }
-    double getValue(){
-        return myResult;
-    }
-
-    void propagateAdjoint() override { }
-    
 };
 
 
