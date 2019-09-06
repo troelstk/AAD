@@ -14,6 +14,7 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <iostream>
 using namespace std;
 
 #define EPS 1.0e-08
@@ -145,7 +146,7 @@ inline double invNormalCdf( const double p)
     
     //    flip sign  // if(x<0.0) r = -r;
     r = -r;
-    
+    //std::cout << r << endl;
     //    done
     return r;
 }

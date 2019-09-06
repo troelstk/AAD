@@ -62,11 +62,13 @@ int main(int argc, const char * argv[]) {
     
     
     double heston_res;
-    double k = 0.15, lambda = 0.2, eps = 0.5, rho = 0.5, spot=100, strike = 100, timeToMat = 1;
-    double nPaths = 100, nSteps = 20;
+    double k = 0.01, lambda = 0.15, eps = 0.5, rho = 0.0, spot=100, strike = 100, timeToMat = 1.0;
+    double nPaths = 1000000, nSteps = 20;
+    begin_time = clock();
     heston_res = Heston_MC(k, lambda, eps, rho, spot, strike, timeToMat, nPaths, nSteps, 123);
-    
-    cout << heston_res << endl;
+    //Heston_MC(T k, T lambda, T eps, T rho, T spot, T K, T TimeToMat, double nPaths, double nSteps, double seed = 1)
+    cout << "Heston result: " << heston_res << endl;
+    cout << "Calculation time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds" << endl;
     
     //number x = number(3.09);
     

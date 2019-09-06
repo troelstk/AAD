@@ -2,6 +2,7 @@
 
 #include <math.h>
 #include "gaussians.h"
+#include <cstdlib>
 
 template<class T>
 T Heston_MC(T k, T lambda, T eps, T rho, T spot, T K, T TimeToMat, double nPaths, double nSteps, double seed = 1) {
@@ -18,11 +19,12 @@ T Heston_MC(T k, T lambda, T eps, T rho, T spot, T K, T TimeToMat, double nPaths
         S = spot;
         v = 1;
         for (int i = 0; i < int_nSteps; i++) {
-            N = invNormalCdf(double(rand() + 1) / (RAND_MAX + 2));
-            N2 = a * N + b * invNormalCdf(double(rand() + 1) / (RAND_MAX + 2));
+            double unif = double(rand() + 1.0) / double(RAND_MAX + 2.0);
+            N = invNormalCdf(unif);
+            N2 = a * N + b * invNormalCdf(double(rand() + 1.0) / double(RAND_MAX + 2.0));
             x = 1 + exp(-k * dt)*(v - 1);
             y = sqrt(log(1 +
-                         eps * eps*(v*(exp(-k * dt) - exp(-2 * k * dt)) + 0.5*pow((1 - exp(-k * dt)), 2))
+                         eps * eps*(v*(exp(-k * dt) - exp(-2 * k * dt)) + 0.5*pow((1 - exp(-k * dt)), 2.0))
                          / (k*x*x)
                          ));
             S += lambda * sqrt(v)*S*sqrt(dt)*N2;
