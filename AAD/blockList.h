@@ -195,7 +195,7 @@ public:
             return *this;
         }
         iterator& operator--(){
-            if(cur_space == last_space){
+            if(cur_space == first_space){
                 --cur_block;
                 
                 first_space = cur_block->begin();

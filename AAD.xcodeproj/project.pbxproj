@@ -26,6 +26,7 @@
 /* Begin PBXFileReference section */
 		9F746E69231FA126006DE0C4 /* AAD.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AAD.h; sourceTree = "<group>"; };
 		9F746E6A231FB6A6006DE0C4 /* gaussians.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gaussians.h; sourceTree = "<group>"; };
+		9FDB0C31232278CF00B048BB /* Heston.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Heston.h; sourceTree = "<group>"; };
 		9FF228FA231D55D400EF06F1 /* AAD */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AAD; sourceTree = BUILT_PRODUCTS_DIR; };
 		9FF22904231D562E00EF06F1 /* memoryConsumption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = memoryConsumption.h; sourceTree = "<group>"; };
 		9FF22905231D562E00EF06F1 /* number.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = number.h; sourceTree = "<group>"; };
@@ -67,6 +68,7 @@
 		9FF228FC231D55D400EF06F1 /* AAD */ = {
 			isa = PBXGroup;
 			children = (
+				9FDB0C31232278CF00B048BB /* Heston.h */,
 				9FF2290D231F916900EF06F1 /* AAD.cpp */,
 				9F746E69231FA126006DE0C4 /* AAD.h */,
 				9FF2290C231D57E600EF06F1 /* tape.h */,
