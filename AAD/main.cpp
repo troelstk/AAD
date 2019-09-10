@@ -33,13 +33,10 @@ template<class T> T trialFunction (T x[3]) {
 };
 
 int main(int argc, const char * argv[]) {
-    size_t currentSize = getCurrentRSS( );
-    cout << "Current size is " << currentSize/10e6 << " MB" << endl;
+    //size_t currentSize = getCurrentRSS( );
+    //cout << "Current size is " << currentSize/10e6 << " MB" << endl;
+    /*number x[3] = {number(1.1), number(1.2), number(1.3)};
     
-    number::tape->rewind();
-    
-    number x[3] = {number(1.1), number(1.2), number(1.3)};
-    clock_t begin_time = clock();
     
     number y = trialFunction(x);
     cout << "Result for number's: " << y.value() << endl;
@@ -56,23 +53,58 @@ int main(int argc, const char * argv[]) {
     begin_time = clock();
     double y_double = trialFunction(x_double);
     cout << "Result for doubles: " << y_double << endl;
-    cout << "Calculation time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
+    cout << "Calculation time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;*/
     
+    /*number result(0.0), temp(0.0);
+     
+     number::tape->mark();
+     for(int i=0; i<5; ++i){
+     number::tape->rewindToMark();
+     number temp = lambda * k;
+     temp.propagateToMark();
+     result += temp;
+     cout << i << endl;
+     }
+     
+     cout << "val is " << result.value() << endl;
+     cout << "adj is " << k.adjoint() << endl;*/
     
-    
-    
-    double heston_res;
-    double k = 0.01, lambda = 0.15, eps = 0.5, rho = 0.0, spot=100, strike = 100, timeToMat = 1.0;
-    double nPaths = 1000000, nSteps = 20;
-    begin_time = clock();
-    heston_res = Heston_MC(k, lambda, eps, rho, spot, strike, timeToMat, nPaths, nSteps, 123);
-    //Heston_MC(T k, T lambda, T eps, T rho, T spot, T K, T TimeToMat, double nPaths, double nSteps, double seed = 1)
-    cout << "Heston result: " << heston_res << endl;
-    cout << "Calculation time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds" << endl;
-    
-    //number x = number(3.09);
+    clock_t begin_time = clock();
     
     number::tape->rewind();
+    
+    double k1 = 1, lambda1 = 0.2, eps1 = 0.5, rho1 = 0.0, spot1=100, strike1 = 100, timeToMat1 = 1.0;
+    double nPaths1 = 100000, nSteps1 = 20;
+    
+    number heston_res;
+    number k(k1), lambda(lambda1), eps(eps1), rho(rho1), spot(spot1), strike(strike1), timeToMat(timeToMat1), nSteps(nSteps1);
+    double nPaths = nPaths1;
+
+    
+    begin_time = clock();
+    heston_res = Heston_MC_AAD(k, lambda, eps, rho, spot, strike, timeToMat, nPaths, nSteps, 12);
+    cout << "Heston result with AAD: " << heston_res.value() << endl;
+    cout << "Calculation time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds" << endl;
+    
+    
+    cout << "Delta is " << spot.adjoint()/double(nPaths) << endl;
+    
+    // Heston without AAD:
+    double heston_res1;
+    begin_time = clock();
+    heston_res1 = Heston_MC(k1, lambda1, eps1, rho1, spot1, strike1, timeToMat1, nPaths1, nSteps1, 12);
+    cout << "Heston result without AAD: " << heston_res1 << endl;
+    cout << "Calculation time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds" << endl;
+    
+    
+    
+    // Central difference delta:
+    double heston_res2 =
+        Heston_MC(k1, lambda1, eps1, rho1, spot1+0.001, strike1, timeToMat1, nPaths1, nSteps1, 12);
+    cout << "Delta should be (CD): " << (heston_res2-heston_res1)/(0.001) << endl;
+    
+    
+    
     
     // << "\n";
     return 0;

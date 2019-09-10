@@ -25,6 +25,8 @@ class node {
     
     double mAdjoint = 0;
     
+    int debug = 0;
+    
     double* pDerivatives;
     
     double** pAdjPtrs;
@@ -41,6 +43,7 @@ public:
     {
         // Return if zero childs or mAdjoint is 0
         if ( !n || !mAdjoint) return;
+        
         for(size_t i = 0; i < n; ++i ) {
             *(pAdjPtrs[i]) += pDerivatives[i] * mAdjoint;
         }

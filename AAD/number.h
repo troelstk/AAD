@@ -129,8 +129,13 @@ public:
         propagateAdjoints(tape->begin());
     }
     void propagateToMark() {
-        // Propagate adjoints to start
+        // Propagate adjoints to mark
         propagateAdjoints(tape->markIt());
+    }
+
+    static void propagateMarkToStart() {
+        // Propagate adjoints from mark-1 to start
+        propagateAdjoints(prev(tape->markIt()), tape->begin());
     }
     
     // Operator overloads

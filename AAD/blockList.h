@@ -12,6 +12,7 @@
 #include <array>
 #include <list>
 #include <iterator>
+#include <iostream>
 
 using namespace std;
 
@@ -44,6 +45,7 @@ class blockList
         cur_block = last_block = prev(data.end()); // prev is iterator pointing to element before input
         next_space = cur_block->begin();
         last_space = cur_block->end();
+        //std::cout << "new block created\n";
     }
     
     void nextBlock(){
