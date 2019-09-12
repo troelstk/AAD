@@ -11,7 +11,6 @@
 
 #include "number.h"
 #include "blockList.h"
-#include "memoryConsumption.h"
 #include "tape.h"
 
 using namespace std;

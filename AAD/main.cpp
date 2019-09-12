@@ -8,6 +8,9 @@
 
 
 #include <iostream>
+#include "armadillo.hpp"
+
+using namespace arma;
 
 #include <vector>
 #include <ctime>
@@ -17,95 +20,47 @@
 #include "AAD.h"
 //#include "trialFunction.h"
 #include "Heston.h"
+#include "lsm.h"
 
 using namespace std;
 
-// Define function
-template<class T> T trialFunction (T x[3]) {
-    
-    auto temp = x[0] + x[1]*x[2] + x[2];
-    
-    for( int i = 1; i<1000; ++i){ // max 30000
-        temp += x[0] + x[2] * x[1] + 5.12312 + x[0] *x[1] *x[2];
-    }
-    
-    return temp;
-};
+
 
 int main(int argc, const char * argv[]) {
-    //size_t currentSize = getCurrentRSS( );
-    //cout << "Current size is " << currentSize/10e6 << " MB" << endl;
-    /*number x[3] = {number(1.1), number(1.2), number(1.3)};
-    
-    
-    number y = trialFunction(x);
-    cout << "Result for number's: " << y.value() << endl;
-    y.propagateToStart();
-    cout << "Propagation time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
-    for( int i = 0; i<3; i++) {
-        cout << "Differential is " << x[i].adjoint() <<  endl;
-    }
-    size_t diff =  getCurrentRSS( )-currentSize;
-    cout << "Additional memory used " << diff/10e6 << " MB" << endl;
-    
-    
-    double x_double[3] = {1.1, 1.2, 1.3};
-    begin_time = clock();
-    double y_double = trialFunction(x_double);
-    cout << "Result for doubles: " << y_double << endl;
-    cout << "Calculation time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;*/
-    
-    /*number result(0.0), temp(0.0);
-     
-     number::tape->mark();
-     for(int i=0; i<5; ++i){
-     number::tape->rewindToMark();
-     number temp = lambda * k;
-     temp.propagateToMark();
-     result += temp;
-     cout << i << endl;
-     }
-     
-     cout << "val is " << result.value() << endl;
-     cout << "adj is " << k.adjoint() << endl;*/
-    
-    clock_t begin_time = clock();
-    
-    number::tape->rewind();
-    
-    double k1 = 1, lambda1 = 0.2, eps1 = 0.5, rho1 = 0.0, spot1=100, strike1 = 100, timeToMat1 = 1.0;
-    double nPaths1 = 100000, nSteps1 = 20;
-    
-    number heston_res;
-    number k(k1), lambda(lambda1), eps(eps1), rho(rho1), spot(spot1), strike(strike1), timeToMat(timeToMat1), nSteps(nSteps1);
-    double nPaths = nPaths1;
+   
+    //test_heston();
 
+    //lsm(50, 20);
     
-    begin_time = clock();
-    heston_res = Heston_MC_AAD(k, lambda, eps, rho, spot, strike, timeToMat, nPaths, nSteps, 12);
-    cout << "Heston result with AAD: " << heston_res.value() << endl;
-    cout << "Calculation time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds" << endl;
-    
-    
-    cout << "Delta is " << spot.adjoint()/double(nPaths) << endl;
-    
-    // Heston without AAD:
-    double heston_res1;
-    begin_time = clock();
-    heston_res1 = Heston_MC(k1, lambda1, eps1, rho1, spot1, strike1, timeToMat1, nPaths1, nSteps1, 12);
-    cout << "Heston result without AAD: " << heston_res1 << endl;
-    cout << "Calculation time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds" << endl;
-    
-    
-    
-    // Central difference delta:
-    double heston_res2 =
-        Heston_MC(k1, lambda1, eps1, rho1, spot1+0.001, strike1, timeToMat1, nPaths1, nSteps1, 12);
-    cout << "Delta should be (CD): " << (heston_res2-heston_res1)/(0.001) << endl;
-    
-    
-    
+    double res = bsMonteCarlo(100, 0.2, 1, 100);
+    cout << "Result is " <<  res <<  endl;
     
     // << "\n";
     return 0;
 }
+
+/*#include <iostream>
+#include <armadillo>
+
+int main(int argc, const char **argv) {
+    // Initialize the random generator
+    arma::arma_rng::set_seed_random();
+    // Create a 4x4 random matrix and print it on the screen
+    arma::Mat<double> A = arma::randu(4,4);
+    std::cout << "A:\n" << A << "\n";
+    // Multiply A with his transpose:
+    std::cout << "A * A.t() =\n";
+    std::cout << A * A.t() << "\n";
+    // Access/Modify rows and columns from the array:
+    A.row(0) = A.row(1) + A.row(3);
+    A.col(3).zeros();
+    std::cout << "add rows 1 and 3, store result in row 0, also fill 4th column with zeros:\n";
+    std::cout << "A:\n" << A << "\n";
+    // Create a new diagonal matrix using the main diagonal of A:
+    arma::Mat<double>B = arma::diagmat(A);
+    std::cout << "B:\n" << B << "\n";
+    // Save matrices A and B:
+    A.save("A_mat.txt", arma::arma_ascii);
+    B.save("B_mat.txt", arma::arma_ascii);
+    return 0;
+}*/
