@@ -33,7 +33,6 @@ public:
     node* recordNode()
     {
         node* Node = myNodes.emplace_back(N);
-        //std::cout << "Debug 1 " << endl;
         if constexpr(N != 0)
         {
             // Set derivatives

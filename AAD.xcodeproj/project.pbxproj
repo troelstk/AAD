@@ -29,6 +29,7 @@
 		9F746E6A231FB6A6006DE0C4 /* gaussians.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gaussians.h; sourceTree = "<group>"; };
 		9F78B45E232A62FF00972AF1 /* libarmadillo.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libarmadillo.dylib; path = usr/lib/libarmadillo.dylib; sourceTree = SDKROOT; };
 		9F8B4315232A4D6800119D18 /* libarmadillo.9.70.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libarmadillo.9.70.2.dylib; path = ../../../../../../usr/local/lib/libarmadillo.9.70.2.dylib; sourceTree = "<group>"; };
+		9FD1777D232F694800D6C6A2 /* swap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = swap.h; sourceTree = "<group>"; };
 		9FDB0C31232278CF00B048BB /* Heston.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Heston.h; sourceTree = "<group>"; };
 		9FF228FA231D55D400EF06F1 /* AAD */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AAD; sourceTree = BUILT_PRODUCTS_DIR; };
 		9FF22905231D562E00EF06F1 /* number.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = number.h; sourceTree = "<group>"; };
@@ -42,6 +43,7 @@
 		9FF6D2AB232A6D6300B4CAED /* armadillo.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = armadillo.hpp; sourceTree = "<group>"; };
 		9FF6D2AC232A71B100B4CAED /* lsm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lsm.h; sourceTree = "<group>"; };
 		9FF6D2AD232A7CBC00B4CAED /* mrg32k3a.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mrg32k3a.h; sourceTree = "<group>"; };
+		9FF6D2AE232BC9B700B4CAED /* vasicek.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = vasicek.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,12 +95,14 @@
 				9F746E69231FA126006DE0C4 /* AAD.h */,
 				9FF2290C231D57E600EF06F1 /* tape.h */,
 				9FF22908231D562E00EF06F1 /* blockList.h */,
-				9FF22907231D562E00EF06F1 /* main.cpp */,
 				9FF22909231D562E00EF06F1 /* node.h */,
 				9FF22905231D562E00EF06F1 /* number.h */,
 				9FF22906231D562E00EF06F1 /* trialFunction.h */,
 				9F746E6A231FB6A6006DE0C4 /* gaussians.h */,
 				9FF6D2AC232A71B100B4CAED /* lsm.h */,
+				9FD1777D232F694800D6C6A2 /* swap.h */,
+				9FF6D2AE232BC9B700B4CAED /* vasicek.h */,
+				9FF22907231D562E00EF06F1 /* main.cpp */,
 			);
 			path = AAD;
 			sourceTree = "<group>";

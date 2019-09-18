@@ -224,7 +224,7 @@ public:
 		reset();
 
 		//	How many numbers to skip
-		unsigned skipnums = b * myDim;
+		unsigned skipnums = (unsigned)(b * myDim);
 		bool odd = false;
 
 		//	Antithetic: skip only half
@@ -338,9 +338,9 @@ private:
 		unsigned skip = b;
 
 		static constexpr unsigned long long
-			m1l = unsigned long long(m1);
+			m1l = (unsigned long long)(m1);
 		static constexpr unsigned long long
-			m2l = unsigned long long(m2);
+			m2l = (unsigned long long)(m2);
 
 		unsigned long long Ab[3][3] = {
 			{ 1, 0 ,0 },
@@ -355,8 +355,8 @@ private:
 			Ai[3][3] = {        //  A0 = A
 				{
 					0,
-					unsigned long long(a12) ,
-					unsigned long long(m1 - a13)
+					(unsigned long long)(a12) ,
+					(unsigned long long)(m1 - a13)
 					//	m1 - a13 instead of -a13
 					//	so results are always positive
 					//	and we can use unsigned long longs
@@ -367,9 +367,9 @@ private:
 		},
 			Bi[3][3] = {        //  B0 = B
 				{
-					unsigned long long(a21),
+					(unsigned long long)(a21),
 					0 ,
-					unsigned long long(m2 - a23)
+					(unsigned long long)(m2 - a23)
 					//	same logic: m2 - a32
 				},
 		{ 1, 0, 0 },
@@ -395,15 +395,15 @@ private:
 		//  Final result
 		unsigned long long X0[3] =
 		{
-			unsigned long long(myXn),
-			unsigned long long(myXn1),
-			unsigned long long(myXn2)
+			(unsigned long long)(myXn),
+			(unsigned long long)(myXn1),
+			(unsigned long long)(myXn2)
 		},
 			Y0[3] =
 		{
-			unsigned long long(myYn),
-			unsigned long long(myYn1),
-			unsigned long long(myYn2)
+			(unsigned long long)(myYn),
+			(unsigned long long)(myYn1),
+			(unsigned long long)(myYn2)
 		},
 			temp[3];
 
