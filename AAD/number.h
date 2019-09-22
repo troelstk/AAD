@@ -13,8 +13,8 @@
 #include "tape.h"
 #include "gaussians.h"
 
-#include<memory>
-#include<iostream>
+#include <memory>
+#include <iostream>
 #include <cmath>
 
 using namespace std;
@@ -80,7 +80,7 @@ public:
     }
     
     // Assignment of numeric value creates a leaf node
-    number& operator=(const double val){
+    number& operator=(const double & val){
         myValue = val;
         createNode<0>();
         return *this;

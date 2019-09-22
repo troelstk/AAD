@@ -33,7 +33,6 @@
 		9FDB0C31232278CF00B048BB /* Heston.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Heston.h; sourceTree = "<group>"; };
 		9FF228FA231D55D400EF06F1 /* AAD */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AAD; sourceTree = BUILT_PRODUCTS_DIR; };
 		9FF22905231D562E00EF06F1 /* number.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = number.h; sourceTree = "<group>"; };
-		9FF22906231D562E00EF06F1 /* trialFunction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = trialFunction.h; sourceTree = "<group>"; };
 		9FF22907231D562E00EF06F1 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		9FF22908231D562E00EF06F1 /* blockList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = blockList.h; sourceTree = "<group>"; };
 		9FF22909231D562E00EF06F1 /* node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = node.h; sourceTree = "<group>"; };
@@ -97,7 +96,6 @@
 				9FF22908231D562E00EF06F1 /* blockList.h */,
 				9FF22909231D562E00EF06F1 /* node.h */,
 				9FF22905231D562E00EF06F1 /* number.h */,
-				9FF22906231D562E00EF06F1 /* trialFunction.h */,
 				9F746E6A231FB6A6006DE0C4 /* gaussians.h */,
 				9FF6D2AC232A71B100B4CAED /* lsm.h */,
 				9FD1777D232F694800D6C6A2 /* swap.h */,
