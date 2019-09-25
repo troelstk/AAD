@@ -61,7 +61,7 @@ template<class T> T vasicek_swap(vector<T> params, T t, T Ta, T Tb, T r_fix, T n
         for(int j=0; j<nSteps; ++j){
             r_sim += k * (theta - r_sim) * dt + sig * sqrt(dt) * gauss[j];
         }
-        T temp = swap_price(r_fix, r_sim, notional, t, Ta, Tb, params, P, yearly_payments);
+        T temp = vasicek_swap_price(r_fix, r_sim, notional, t, Ta, Tb, params, P, yearly_payments);
         res += temp;
     }
     
@@ -92,7 +92,7 @@ template<class T> T vasicek_swaption(vector<T> params, T t, T Ta, T Tb, T r_fix,
             r_sim += k * (theta - r_sim) * dt + sig * sqrt(dt) * gauss[j];
         }
         // Compute time Ta price of a swap from Ta+1 to Tb
-        T price = swap_price(r_fix, r_sim, notional, Ta, Ta, Tb, params, P, yearly_payments);
+        T price = vasicek_swap_price(r_fix, r_sim, notional, Ta, Ta, Tb, params, P, yearly_payments);
         res += max(price - strike, 0.0);
     }
     // Discount result back from time Ta to time t
@@ -127,9 +127,9 @@ template<class T> T vasicek_swaption_aad(vector<T> params, T t, T Ta, T Tb, T r_
             r_sim += k * (theta - r_sim) * dt + sig * sqrt(dt) * gauss[j];
         }
         // Compute time Ta price of a swap from Ta+1 to Tb
-        T price = swap_price(r_fix, r_sim, notional, Ta, Ta, Tb, params, P, yearly_payments);
+        T price = vasicek_swap_price(r_fix, r_sim, notional, Ta, Ta, Tb, params, P, yearly_payments);
         
-        number payoff(max(price - strike, 0.0));
+        T payoff(max(price - strike, 0.0));
         
         payoff.propagateToMark();
         
@@ -154,14 +154,16 @@ void test_vasicek()
     double theta = 0.04; // Long term average rate
     double sig = 0.02; // instantaneous volatility
     
+    double r_fix = 0.04, r_short = 0.02, notional = 100, Ta = 1.0, Tb = 4.0, yearly_payments = 1.0;
+    double strike = 0.0;
+    
     vector<double> params = {k, theta, sig};
     
     double swap_rate_1 = swap_rate(r0, t, t, mat, params, P, yearly);
     cout << "Swap rate is " << swap_rate_1 << endl;
     
-    double r_fix = 0.04, r_short = 0.02, notional = 100, Ta = 1.0, Tb = 4.0, yearly_payments = 1.0;
     
-    double swap_price1 = swap_price(r_fix, r_short, notional, t, Ta, Tb, params, P, yearly_payments);
+    double swap_price1 = vasicek_swap_price(r_fix, r_short, notional, t, Ta, Tb, params, P, yearly_payments);
     
     cout << "Swap price is " << swap_price1 << endl;
     
@@ -169,7 +171,7 @@ void test_vasicek()
                                    seed1, seed2, nPaths, nSteps, yearly_payments);
     cout << "simulated swap value is " << sim_swap << endl;
     
-    double strike = 0.0;
+
     nPaths = 10000;
     double sim_swaption = vasicek_swaption(params, t, Ta, Tb, r_fix, notional, r0,
                                            seed1, seed2, nPaths, nSteps, yearly_payments, strike);

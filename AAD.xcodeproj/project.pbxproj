@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9F937059233B6F3A008BE349 /* libarmadillo.9.70.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F937058233B6F3A008BE349 /* libarmadillo.9.70.2.dylib */; settings = {ATTRIBUTES = (Required, ); }; };
 		9FF2290A231D562E00EF06F1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9FF22907231D562E00EF06F1 /* main.cpp */; };
 		9FF2290E231F916900EF06F1 /* AAD.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9FF2290D231F916900EF06F1 /* AAD.cpp */; };
-		9FF6D2AA232A6C0000B4CAED /* libarmadillo.9.70.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FF6D2A9232A6C0000B4CAED /* libarmadillo.9.70.2.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,10 +25,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		9F0B0E422337AC03009C35DD /* LMM.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LMM.h; sourceTree = "<group>"; };
+		9F0B0E432338AE1E009C35DD /* utilities.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = utilities.h; sourceTree = "<group>"; };
 		9F746E69231FA126006DE0C4 /* AAD.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AAD.h; sourceTree = "<group>"; };
 		9F746E6A231FB6A6006DE0C4 /* gaussians.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gaussians.h; sourceTree = "<group>"; };
-		9F78B45E232A62FF00972AF1 /* libarmadillo.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libarmadillo.dylib; path = usr/lib/libarmadillo.dylib; sourceTree = SDKROOT; };
-		9F8B4315232A4D6800119D18 /* libarmadillo.9.70.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libarmadillo.9.70.2.dylib; path = ../../../../../../usr/local/lib/libarmadillo.9.70.2.dylib; sourceTree = "<group>"; };
+		9F937058233B6F3A008BE349 /* libarmadillo.9.70.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libarmadillo.9.70.2.dylib; path = ../../../../../../usr/local/Cellar/armadillo/9.700.2/lib/libarmadillo.9.70.2.dylib; sourceTree = "<group>"; };
 		9FD1777D232F694800D6C6A2 /* swap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = swap.h; sourceTree = "<group>"; };
 		9FDB0C31232278CF00B048BB /* Heston.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Heston.h; sourceTree = "<group>"; };
 		9FF228FA231D55D400EF06F1 /* AAD */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AAD; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -38,7 +39,6 @@
 		9FF22909231D562E00EF06F1 /* node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = node.h; sourceTree = "<group>"; };
 		9FF2290C231D57E600EF06F1 /* tape.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = tape.h; path = /Users/Troels/Dropbox/Uni/Speciale/AAD/AAD/tape.h; sourceTree = "<absolute>"; };
 		9FF2290D231F916900EF06F1 /* AAD.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = AAD.cpp; path = /Users/Troels/Dropbox/Uni/Speciale/AAD/AAD/AAD.cpp; sourceTree = "<absolute>"; };
-		9FF6D2A9232A6C0000B4CAED /* libarmadillo.9.70.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libarmadillo.9.70.2.dylib; path = ../../../../../../usr/local/Cellar/armadillo/9.700.2/lib/libarmadillo.9.70.2.dylib; sourceTree = "<group>"; };
 		9FF6D2AB232A6D6300B4CAED /* armadillo.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = armadillo.hpp; sourceTree = "<group>"; };
 		9FF6D2AC232A71B100B4CAED /* lsm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lsm.h; sourceTree = "<group>"; };
 		9FF6D2AD232A7CBC00B4CAED /* mrg32k3a.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mrg32k3a.h; sourceTree = "<group>"; };
@@ -50,7 +50,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9FF6D2AA232A6C0000B4CAED /* libarmadillo.9.70.2.dylib in Frameworks */,
+				9F937059233B6F3A008BE349 /* libarmadillo.9.70.2.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -60,9 +60,7 @@
 		9F8B4314232A4D6700119D18 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				9FF6D2A9232A6C0000B4CAED /* libarmadillo.9.70.2.dylib */,
-				9F78B45E232A62FF00972AF1 /* libarmadillo.dylib */,
-				9F8B4315232A4D6800119D18 /* libarmadillo.9.70.2.dylib */,
+				9F937058233B6F3A008BE349 /* libarmadillo.9.70.2.dylib */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -100,6 +98,8 @@
 				9FF6D2AC232A71B100B4CAED /* lsm.h */,
 				9FD1777D232F694800D6C6A2 /* swap.h */,
 				9FF6D2AE232BC9B700B4CAED /* vasicek.h */,
+				9F0B0E432338AE1E009C35DD /* utilities.h */,
+				9F0B0E422337AC03009C35DD /* LMM.h */,
 				9FF22907231D562E00EF06F1 /* main.cpp */,
 			);
 			path = AAD;
@@ -131,7 +131,7 @@
 		9FF228F2231D55D400EF06F1 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1030;
+				LastUpgradeCheck = 1100;
 				ORGANIZATIONNAME = "Troels Tang Karlsen";
 				TargetAttributes = {
 					9FF228F9231D55D400EF06F1 = {
@@ -145,6 +145,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 9FF228F1231D55D400EF06F1;
 			productRefGroup = 9FF228FB231D55D400EF06F1 /* Products */;
@@ -285,6 +286,7 @@
 		9FF22902231D55D400EF06F1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				HEADER_SEARCH_PATHS = "";
 				LIBRARY_SEARCH_PATHS = /usr/local/Cellar/armadillo/9.700.2/lib;
@@ -296,6 +298,7 @@
 		9FF22903231D55D400EF06F1 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				LIBRARY_SEARCH_PATHS = /usr/local/Cellar/armadillo/9.700.2/lib;
 				OTHER_LDFLAGS = "";
