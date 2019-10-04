@@ -43,42 +43,117 @@ int main(int argc, const char * argv[]) {
 
     
     int seed1 = 132, seed2 = 1222;
-    int nSteps = 1, nPaths = 5;
+    int nSteps = 50, nPaths = 10;
     double t = 0.0;
     
     double Ta = 1.0, Tb = 4.0, yearly_payments = 1.0;
-    double strike = 0.0, notional = 100, r_fix = 0.025;
+    double notional = 100.0, r_fix;
     
-    int M = 3; // Dimension of forward curve
+    int M = 4; // Dimension of forward curve
     vector<vector<double>> vol(M,  vector<double>(M));
     vector<vector<double>> corr(M, vector<double>(M));
-    vector<double> F = {0.02, 0.025, 0.03};
-    
-    print( "Swap rate is ", SR_from_F(F, yearly_payments, Ta, Tb) );
+    vector<double> F = {0.01, 0.02, 0.03, 0.04};
+    double swap_rate = SR_from_F(F, yearly_payments, int(Ta), int(Tb));
+    print( "Swap rate is ", swap_rate );
+    r_fix = swap_rate;
     
     // Table 3: Constant vol for each F regardless of time t
-    vol[0] = {0.20, 0.00, 0.00};
-    vol[1] = {0.25, 0.20, 0.00};
-    vol[2] = {0.30, 0.30, 0.20};
+    vol[0] = {0.20, 0.00, 0.00, 0.00};
+    vol[1] = {0.25, 0.25, 0.00, 0.00};
+    vol[2] = {0.30, 0.30, 0.30, 0.00};
+    vol[3] = {0.30, 0.30, 0.30, 0.30};
     // Burde bruge table 5 med time dependent vol
     
-    corr[0] = {1.0, 0.8, 0.7};
-    corr[1] = {0.8, 1.0, 0.8};
-    corr[2] = {0.7, 0.8, 1.0};
+    corr[0] = {1.0, 0.8, 0.7, 0.6};
+    corr[1] = {0.8, 1.0, 0.8, 0.7};
+    corr[2] = {0.7, 0.8, 1.0, 0.8};
+    corr[3] = {0.6, 0.7, 0.8, 1.0};
     // Bør lave mere sofistikeret corr
-    
-    double lmm = LMM_swaption(vol, corr, F, t, Ta, Tb, r_fix, notional,
-                          seed1, seed2, nPaths, nSteps, yearly_payments, strike);
-    cout << "Swaption price is " << lmm << endl;
-    
-    /*vec means(5, fill::zeros);
-    mat B(5, 5, fill::eye);
-    mat C = B.t() * B;
-    
-    print("Cov is ", C);
-    mat X = arma::mvnrnd(means, C, 2);
-     */
+    clock_t begin_time = clock();
 
+    // LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & corr, vector<T> & initF, T t, T Ta, T Tb, T r_fix, T notional, int seed1, int seed2, int nPaths, int nSteps, T yearly_payments)
+    double lmm = LMM_swaption(vol, corr, F, t, Ta, Tb, r_fix, notional,
+                          seed1, seed2, nPaths, nSteps, yearly_payments);
+    auto time =  float( clock () - begin_time )/ CLOCKS_PER_SEC;
+    print("LMM Swaption price is ", lmm);
+    print("Calculation time: ", time, " seconds");
+
+    
+    double sum = 0.0;
+    for(int i = 0; i<F.size(); ++i){
+        double weight = w(F, 1.0, double(i), int(Ta));
+        //print("weight is ", weight);
+        sum += weight * F[i];
+    }
+    print("swap rate is ", sum);
+    
+    double rebonato = sqrt(vol_TFM(F, yearly_payments, Ta, corr, vol, swap_rate, Ta) );
+    print("Rebonato vol is ", rebonato);
+    
+    double Cab = C_ab( F, yearly_payments);
+    
+    // Black(T K, T F0, T vol)
+    double black = Cab * BlackCall( r_fix, swap_rate, rebonato);
+
+    print("Black price ", black*100);
+
+    
+    
+    
+    
+    
+    
+    // Test case as in 8.2 in Brigo
+    
+    print("TEST CASE: ");
+    vector<double> F20 = {0.0469, 0.0501, 0.0560, 0.0584, 0.0600, 0.0613, 0.0628, 0.0627, 0.0629, 0.0623,
+                          0.0630, 0.0636, 0.0643, 0.0648, 0.0653, 0.0640, 0.0630, 0.0618, 0.0607, 0.0594 };
+    
+    // Test 1.b, formulation 7 with a=0, b=0, c=1, d=0, all correlations set to 1
+    M = 20;
+    vector<vector<double>> vol20(M,  vector<double>(M));
+    vector<vector<double>> corr20(M, vector<double>(M));
+
+    double swap_rate20 = SR_from_F(F20, yearly_payments, 10, 20);
+    print( "Swap rate is ", swap_rate20 );
+    r_fix = swap_rate20;
+    
+    vector<double> Phi = {
+        0.000, 0.149, 0.159, 0.153, 0.1450, 0.1360, 0.1270, 0.1210, 0.1180, 0.1140,
+        0.111, 0.108, 0.105, 0.102, 0.0989, 0.0978, 0.0974, 0.0969, 0.0965, 0.0961};
+    // Fill Vol and corr
+    for(int i = 0; i<M; i++){
+        for(int j = 0; j<M; j++){
+            corr20[i][j] = 1.0;
+            vol20[i][j] = (i == j) & (i>0) & (j>0) ? Phi[i] : 0.0;
+        }
+    }
+
+    //print(vol20);
+    //print(corr20);
+    int start_idx = 10;
+    Ta = 10;
+    Tb = 20;
+    double rebonato2 = sqrt(vol_TFM(F20, yearly_payments, Ta, corr20, vol20, swap_rate20, start_idx) );
+    print("Rebonato vol is ", rebonato2/sqrt(Ta));
+    
+    double C = C_ab( F20, yearly_payments);
+    
+    // Black(T K, T F0, T vol)
+    double black20 = C * BlackCall( swap_rate20, swap_rate20, rebonato2);
+    
+    print("Black price ", black20 * 100);
+    
+    nSteps = 50;
+    //nPaths = 10000;
+    
+    double lmm20 = LMM_swaption(vol20, corr20, F20, t, Ta, Tb, swap_rate20, notional,
+                          seed1, seed2, nPaths, nSteps, yearly_payments);
+    time =  float( clock () - begin_time )/ CLOCKS_PER_SEC;
+    print("LMM Swaption price is ", lmm20);
+    print("Calculation time: ", time, " seconds");
+                            
+    
     return 0;
 }
 
@@ -89,7 +164,14 @@ int main(int argc, const char * argv[]) {
  double DF = P(0.01, 0.0, double(i)*0.25, params);
  double yield = yield_from_df(DF, 1.0, 0.0, double(i) * 0.25);
  cout << yield << endl;
- }*/
+ }
+ double weight = w(F, 1.0, 1.0);
+ print("Weight is ", weight);
+ weight += w(F, 1.0, 2.0);
+ print("Weight 2 is ", weight);
+ weight += w(F, 1.0, 3.0);
+ print("Weight 3 is ", weight);
+ */
 
 
 

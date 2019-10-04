@@ -17,80 +17,95 @@ using namespace std;
 template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & corr,
                              vector<T> & initF,
                              T t, T Ta, T Tb, T r_fix, T notional,
-                             int seed1, int seed2, int nPaths, int nSteps, T yearly_payments, T strike)
+                             int seed1, int seed2, int nPaths, int nSteps, T yearly_payments)
 {
     
-    T dt((Ta-t)/double(nSteps));
+    T dt(double(Ta-t)/double(nSteps));
+    T tau(1.0/yearly_payments );
     T sqDt = sqrt(dt);
     T res(0.0);
     T avg_float(0.0);
-    int M = initF.size();
+    size_t M = initF.size();
     
-    T nPayments( (Tb - Ta) * yearly_payments + 1);
-    //print("payments ", nPayments);
+    T nPayments( (Tb - Ta) * yearly_payments);
+    print("payments ", nPayments);
     
-    // Initialize RNG to M (initF.size()), so that we can simulate all forward rates using same RNG
-    mrg32k3a myRNG(seed1, seed2);
-    T nGauss(nSteps*initF.size());
-    myRNG.init(nGauss);
-    vector<double> gauss(nGauss);
-    
-    vec means(initF.size(), fill::zeros);
+    vec means(M, fill::zeros);
     mat C(M, M, fill::zeros);
     
-    // Fill cov
+    // Fill covariance matrix
     for(int i = 0; i<M; ++i){
         for(int j = 0; j<M; ++j){
-            C(i,j) = corr[i][j]*sqrt(vol[i][i])*sqrt(vol[j][j]);
+            //C(i,j) = corr[i][j] * sqrt(vol[i][i] * vol[j][j]);
+            C(i,j) = corr[i][j] * vol[i][i] * vol[j][j];
+            //print(i, " ", j, " Corr ", corr[i][j], " vol i ", sqrt(vol[i][i]), " vol j ", sqrt(vol[j][j]), " gives ", C(i,j) );
         }
     }
-    //print("Cov is ", C);
-    arma_rng::set_seed(seed1);
-    mat X = arma::mvnrnd(means, C, 5);
+    //print("Cov is");
+    //print(C);
     
-    print("Simulated values is \n", X);
+    arma_rng::set_seed(seed1);
     
     vector<T> F;
+    int count = 0;
     
     for(int i = 0; i<nPaths; ++i){
-        myRNG.nextG(gauss);
+        // Simulate multivariate gaussians with covariance C and mean 0
+        mat gauss = arma::mvnrnd(means, C, nSteps);
+        
         vector<T> lnF = log(initF);
         
         for(int n = 0; n<nSteps; ++n) {
-            for(int k = 0; k<Tb-Ta; ++k) // Loop over number of Forward rates to simulate, 0,1,2 = F1,F2,F3
+            //print("STEP ", n);
+            for(int k = int(Ta); k<M; ++k) // Loop over number of Forward rates to simulate, 0,1,2 = F1,F2,F3
             {
+                //print("k is ", k);
+                // Compute sum in Brigo 6.53
                 T sum(0.0);
-                for(int j = 0; j <= k; ++j ) { // Loop over yearly forward rates
-                    sum += corr[k][j] * 1.0/yearly_payments * vol[j][j] * exp(lnF[j]) /
-                    (1.0 + 1.0/yearly_payments * exp(lnF[j]));
+                for(int j = 0; j <= k; ++j ) { // Loop over yearly forward rates,
+                    // 2.0 = alpha+1 = k0, 3.0 = alpha+2 = k1, 4.0 = alpha+3 = beta = k2,
+                    //print("j is ", j);
+                    double Fj = exp(lnF[j]);
+                    sum += corr[k][j] * tau * vol[j][j] * Fj / (1.0 + tau * Fj);
                 }
-                lnF[k] += vol[k][k] * sum * dt - vol[k][k] * vol[k][k]/2.0 * dt +
-                vol[k][k] * sqDt *  gauss[n + k * nSteps]; // invNormalCdf(double(rand() + 1.0) / double(RAND_MAX + 2.0));
+                //print("sum is ", sum);
+                lnF[k] += vol[k][k] * sum * dt - vol[k][k] * vol[k][k]/2.0 * dt + sqDt * gauss(k,n); // vol[k][k] *
+                //print("F[k] is ", exp(lnF[k]));
             }
-
+            //print(exp(lnF));
         }
-        // Now have F_k(T_alpha) for k=
+        // Now have F_k(T_alpha) for k=1,..,M
         F = exp(lnF);
-        T floating_swap_rate = SR_from_F(F, yearly_payments, Ta, Tb);
+        //print("Sim F is ");
+        //print(F);
+        T floating_swap_rate;
+        floating_swap_rate = SR_from_F(F, yearly_payments, (int)(Ta), int(Tb) );
+        //print("floating_swap_rate is ", floating_swap_rate);
         
-        T val = 0.0;
+        T diff_rates;
+        diff_rates = max(floating_swap_rate - r_fix, 0.0);  // Payer: floating_swap_rate - r_fix
+        count += diff_rates > 0.0 ? 1 : 0;
         
+        // Compute value of swap using this floating rate
+        T val(0.0);
         for(int j=0; j<nPayments; ++j){
-            T Ti(Ta + double(j)/yearly_payments);
-            //print("Ti is ", Ti);
-            
-            T disc = DF_from_F(F, yearly_payments, Ta, Ti);
-            //print("disc is ", disc);
-            
-            val += disc * (r_fix - floating_swap_rate) * notional;
+            // Discount back to time Ta
+            T disc = DF_from_F(F, yearly_payments, int(Ta), int(Ta) + 1 + j);
+            //print("Disc is ", disc);
+            val += disc * diff_rates * notional;
         }
         //print("val is ", val);
-        res += max(val-strike, 0.0);
-        print("float is ", floating_swap_rate);
+        res += val;
+
         avg_float += floating_swap_rate;
     }
     print("avg_float is ", avg_float/double(nPaths));
-    return res/double(nPaths);
+    print("count is ", count);
+    // Discounting from Ta to t:
+    T disc;
+    disc = DF_from_F(initF, yearly_payments, int(t), int(Ta));
+    print("Disc is ", disc);
+    return disc * res/double(nPaths);
 }
 
 
