@@ -17,7 +17,7 @@ using namespace std;
 template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & corr,
                              vector<T> & initF,
                              T t, T Ta, T Tb, T r_fix, T notional,
-                             int seed1, int seed2, int nPaths, int nSteps, T yearly_payments)
+                             int seed1, int nPaths, int nSteps, T yearly_payments)
 {
     
     T dt(double(Ta-t)/double(nSteps));
@@ -28,7 +28,7 @@ template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & co
     size_t M = initF.size();
     
     T nPayments( (Tb - Ta) * yearly_payments);
-    print("payments ", nPayments);
+    //print("payments ", nPayments);
     
     vec means(M, fill::zeros);
     mat C(M, M, fill::zeros);
@@ -57,13 +57,13 @@ template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & co
         
         for(int n = 0; n<nSteps; ++n) {
             //print("STEP ", n);
-            for(int k = int(Ta); k<M; ++k) // Loop over number of Forward rates to simulate, 0,1,2 = F1,F2,F3
+            for(int k = int(Ta); k < int(Tb); ++k) // Loop over number of Forward rates to simulate, 1,2,3 = F1,F2,F3
             {
                 //print("k is ", k);
                 // Compute sum in Brigo 6.53
                 T sum(0.0);
-                for(int j = 0; j <= k; ++j ) { // Loop over yearly forward rates,
-                    // 2.0 = alpha+1 = k0, 3.0 = alpha+2 = k1, 4.0 = alpha+3 = beta = k2,
+                for(int j = int(Ta); j <= k; ++j ) { // Loop over yearly forward rates,
+                    // 2.0 = alpha+1 = k[1], 3.0 = alpha+2 = k[2], 4.0 = alpha+3 = beta = k[3],
                     //print("j is ", j);
                     double Fj = exp(lnF[j]);
                     sum += corr[k][j] * tau * vol[j][j] * Fj / (1.0 + tau * Fj);
@@ -76,14 +76,14 @@ template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & co
         }
         // Now have F_k(T_alpha) for k=1,..,M
         F = exp(lnF);
-        //print("Sim F is ");
-        //print(F);
+        //print("Sim F is "); print(F);
         T floating_swap_rate;
-        floating_swap_rate = SR_from_F(F, yearly_payments, (int)(Ta), int(Tb) );
+        floating_swap_rate = SR_from_F(F, yearly_payments, (int)(Ta), (int)(Tb) );
         //print("floating_swap_rate is ", floating_swap_rate);
         
         T diff_rates;
         diff_rates = max(floating_swap_rate - r_fix, 0.0);  // Payer: floating_swap_rate - r_fix
+        //print("diff_rates is ", diff_rates);
         count += diff_rates > 0.0 ? 1 : 0;
         
         // Compute value of swap using this floating rate
@@ -91,7 +91,7 @@ template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & co
         for(int j=0; j<nPayments; ++j){
             // Discount back to time Ta
             T disc = DF_from_F(F, yearly_payments, int(Ta), int(Ta) + 1 + j);
-            //print("Disc is ", disc);
+            //print("Disc is ", disc, " from time ", int(Ta), " to time ", int(Ta) + 1 + j, " ", disc * diff_rates * notional);
             val += disc * diff_rates * notional;
         }
         //print("val is ", val);
@@ -101,10 +101,10 @@ template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & co
     }
     print("avg_float is ", avg_float/double(nPaths));
     print("count is ", count);
-    // Discounting from Ta to t:
+    // Discounting back to time t:
     T disc;
     disc = DF_from_F(initF, yearly_payments, int(t), int(Ta));
-    print("Disc is ", disc);
+    //print("Disc is ", disc);
     return disc * res/double(nPaths);
 }
 

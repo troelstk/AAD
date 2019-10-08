@@ -25,8 +25,6 @@ class node {
     
     double mAdjoint = 0;
     
-    int debug = 0;
-    
     double* pDerivatives;
     
     double** pAdjPtrs;
