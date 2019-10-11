@@ -7,7 +7,7 @@
 //
 
 
-#include "/usr/local/Cellar/armadillo/9.700.2/include/armadillo"
+//#include "/usr/local/Cellar/armadillo/9.700.2/include/armadillo"
 
 //using namespace arma;
 
@@ -43,7 +43,7 @@ int main(int argc, const char * argv[]) {
 
     
     int seed1 = 434;
-    int nSteps = 20, nPaths = 100000;
+    int nSteps = 4, nPaths = 100000;
     double t = 0.0;
     
     double Ta = 1.0, Tb = 4.0, yearly_payments = 1.0;
@@ -73,10 +73,9 @@ int main(int argc, const char * argv[]) {
     
     clock_t begin_time = clock();
 
-    //double lmm = LMM_swaption(vol, corr, F, t, Ta, Tb, r_fix, notional,
-     //                     seed1, nPaths, nSteps, yearly_payments);
+    double lmm = LMM_swaption(vol, corr, F, t, Ta, Tb, r_fix, notional, seed1, nPaths, nSteps, yearly_payments);
     auto time =  float( clock () - begin_time )/ CLOCKS_PER_SEC;
-    //print("LMM Swaption price is ", lmm);
+    print("LMM Swaption price is ", lmm);
     print("Calculation time: ", time, " seconds");
 
     
@@ -86,7 +85,7 @@ int main(int argc, const char * argv[]) {
         //print("weight is ", weight);
         sum += weight * F[i];
     }
-    print("swap rate is ", sum);
+    print("swap rate from weights is ", sum);
     
     double rebonato = sqrt(vol_TFM(F, yearly_payments, Ta, corr, vol, swap_rate, Ta) );
     print("Rebonato vol is ", rebonato);
@@ -97,7 +96,7 @@ int main(int argc, const char * argv[]) {
     
     double disc = DF_from_F(F[0], 1.0);
     
-    print("Disc is ", disc);
+    //print("Disc is ", disc);
     print("Black price ", disc * black * notional);
 
     
@@ -108,8 +107,8 @@ int main(int argc, const char * argv[]) {
     
     // Test case as in 8.2 in Brigo
     
-    print("TEST CASE: ");
-    Ta = 10;
+    print("\nTEST CASE: ");
+    Ta = 9;
     Tb = 20;
     vector<double> F20 = {0.0469, 0.0501, 0.0560, 0.0584, 0.0600, 0.0613, 0.0628, 0.0627, 0.0629, 0.0623,
                           0.0630, 0.0636, 0.0643, 0.0648, 0.0653, 0.0640, 0.0630, 0.0618, 0.0607, 0.0594 };
@@ -119,7 +118,7 @@ int main(int argc, const char * argv[]) {
     vector<vector<double>> vol20(M,  vector<double>(M));
     vector<vector<double>> corr20(M, vector<double>(M));
 
-    double swap_rate20 = SR_from_F(F20, yearly_payments, int(Ta), int(Tb));
+    double swap_rate20 = SR_from_F(F20, yearly_payments, int(Ta)+1, int(Tb));
     print( "Swap rate is ", swap_rate20 );
     r_fix = swap_rate20;
     
@@ -133,29 +132,37 @@ int main(int argc, const char * argv[]) {
             vol20[i][j] = (i == j) & (i>0) & (j>0) ? Phi[i] : 0.0;
         }
     }
+    double sum2 = 0.0;
+    for(int i = int(Ta)+1; i<int(Tb); ++i){
+        double weight = w(F20, yearly_payments, double(i), int(Ta)+1);
+        sum2 += weight * F20[i];
+    }
+    print("swap rate from weights is ", sum2);
 
-    //print(vol20);
-    //print(corr20);
-
-    double rebonato2 = sqrt(vol_TFM(F20, yearly_payments, Ta, corr20, vol20, swap_rate20, int(Ta)) );
+    double rebonato2 = sqrt(vol_TFM(F20, yearly_payments, Ta, corr20, vol20, swap_rate20, int(Ta) + 1) );
     print("Rebonato vol is ", rebonato2/sqrt(Ta));
     
-    double C = C_ab( F20, yearly_payments, int(Ta), int(Tb));
+    double C = C_ab( F20, yearly_payments, int(Ta)+1, int(Tb));
     
     // Black(T K, T F0, T vol)
-    disc = DF_from_F(F20, 1.0, t, Ta);
+    disc = DF_from_F(F20, yearly_payments, t, Ta);
     print("Disc is ", disc);
     
     double black20 = BlackCall( swap_rate20, swap_rate20, rebonato2);
     print("Black price ", disc * C * notional * black20 );
     
-    
-    
-    nSteps = 50;
-    nPaths = 10000;
+    //mat X = randn<mat>(5,5);
+    //mat Y = X.t()*X;
+    //mat R1 = chol(Y);
+    //mat R2 = chol(Y, "lower");
+
+    nSteps = 20;
+    nPaths = 20000;
     
     double lmm20 = -1.0;
-    lmm20 = LMM_swaption(vol20, corr20, F20, t, Ta, Tb, swap_rate20, notional,
+
+
+    lmm20 = LMM_swaption(vol20, corr20, F20, t, Ta, Tb, r_fix, notional,
                           seed1, nPaths, nSteps, yearly_payments);
     time =  float( clock () - begin_time )/ CLOCKS_PER_SEC;
     print("LMM Swaption price is ", lmm20);
@@ -166,54 +173,3 @@ int main(int argc, const char * argv[]) {
     
     return 0;
 }
-
-/*cout << "Yield curve: " << endl;
- params[0] = 2;
- params[1] = 0.04;
- for(int i=1; i<4*20; ++i){
- double DF = P(0.01, 0.0, double(i)*0.25, params);
- double yield = yield_from_df(DF, 1.0, 0.0, double(i) * 0.25);
- cout << yield << endl;
- }
- double weight = w(F, 1.0, 1.0);
- print("Weight is ", weight);
- weight += w(F, 1.0, 2.0);
- print("Weight 2 is ", weight);
- weight += w(F, 1.0, 3.0);
- print("Weight 3 is ", weight);
- */
-
-
-
-/*arma::arma_rng::set_seed_random();
-// Create a 4x4 random matrix and print it on the screen
-arma::Mat<double> A = arma::randu(4,4);
-std::cout << "A:\n" << A << "\n";
-// Multiply A with his transpose:
-std::cout << "A * A.t() =\n";
-std::cout <<  A * A.t() << "\n";*/
-
-/*#include <iostream>
-
-int main(int argc, const char **argv) {
-    // Initialize the random generator
-    arma::arma_rng::set_seed_random();
-    // Create a 4x4 random matrix and print it on the screen
-    arma::Mat<double> A = arma::randu(4,4);
-    std::cout << "A:\n" << A << "\n";
-    // Multiply A with his transpose:
-    std::cout << "A * A.t() =\n";
-    std::cout << A * A.t() << "\n";
-    // Access/Modify rows and columns from the array:
-    A.row(0) = A.row(1) + A.row(3);
-    A.col(3).zeros();
-    std::cout << "add rows 1 and 3, store result in row 0, also fill 4th column with zeros:\n";
-    std::cout << "A:\n" << A << "\n";
-    // Create a new diagonal matrix using the main diagonal of A:
-    arma::Mat<double>B = arma::diagmat(A);
-    std::cout << "B:\n" << B << "\n";
-    // Save matrices A and B:
-    A.save("A_mat.txt", arma::arma_ascii);
-    B.save("B_mat.txt", arma::arma_ascii);
-    return 0;
-}*/

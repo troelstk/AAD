@@ -10,7 +10,8 @@
 #define LMM_h
 #include <cmath>
 #include "utilities.h"
-#include "/usr/local/Cellar/armadillo/9.700.2/include/armadillo"
+#include "gaussians.h"
+//#include "/usr/local/Cellar/armadillo/9.700.2/include/armadillo"
 
 using namespace std;
 
@@ -28,7 +29,7 @@ template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & co
     size_t M = initF.size();
     
     T nPayments( (Tb - Ta) * yearly_payments);
-    //print("payments ", nPayments);
+    print("payments ", nPayments, " ", M);
     
     vec means(M, fill::zeros);
     mat C(M, M, fill::zeros);
@@ -36,29 +37,34 @@ template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & co
     // Fill covariance matrix
     for(int i = 0; i<M; ++i){
         for(int j = 0; j<M; ++j){
-            //C(i,j) = corr[i][j] * sqrt(vol[i][i] * vol[j][j]);
             C(i,j) = corr[i][j] * vol[i][i] * vol[j][j];
-            //print(i, " ", j, " Corr ", corr[i][j], " vol i ", sqrt(vol[i][i]), " vol j ", sqrt(vol[j][j]), " gives ", C(i,j) );
+            //print(i, " ", j, " Corr ", corr[i][j], " vol i ", vol[i][i], " vol j ", vol[j][j], " gives ", C(i,j) );
         }
     }
-    //print("Cov is");
-    //print(C);
+    //print("Cov is"); print(C);
+    
+    mat Cs = C( span(int(Ta),M-1), span(int(Ta),M-1) ); // Select subset of full covariance matrix to simulate from
+    //print("Cov small is"); print(Cs);
+    vec meansS((Tb - Ta), fill::zeros);
     
     arma_rng::set_seed(seed1);
     
     vector<T> F;
     int count = 0;
     
+    vector<T> lnRates(nPaths);
+    //mat myMat = mvn_rnd(means, Cs, 1);
+    
     for(int i = 0; i<nPaths; ++i){
         // Simulate multivariate gaussians with covariance C and mean 0
-        mat gauss = arma::mvnrnd(means, C, nSteps);
-        
+        //mat gauss = arma::mvnrnd(means, C, nSteps);
+        mat gaussS = arma::mvnrnd(meansS, Cs, nSteps);
         vector<T> lnF = log(initF);
         
         for(int n = 0; n<nSteps; ++n) {
             //print("STEP ", n);
             for(int k = int(Ta); k < int(Tb); ++k) // Loop over number of Forward rates to simulate, 1,2,3 = F1,F2,F3
-            {
+            {   // When Ta is 9, we access 10'th (alpha+1) entry in F
                 //print("k is ", k);
                 // Compute sum in Brigo 6.53
                 T sum(0.0);
@@ -68,9 +74,8 @@ template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & co
                     double Fj = exp(lnF[j]);
                     sum += corr[k][j] * tau * vol[j][j] * Fj / (1.0 + tau * Fj);
                 }
-                //print("sum is ", sum);
-                lnF[k] += vol[k][k] * sum * dt - vol[k][k] * vol[k][k]/2.0 * dt + sqDt * gauss(k,n); // vol[k][k] *
-                //print("F[k] is ", exp(lnF[k]));
+                //lnF[k] += vol[k][k] * sum * dt - vol[k][k] * vol[k][k]/2.0 * dt + sqDt * gauss(k,n); // gaussS(k-Ta,n)
+                lnF[k] += vol[k][k] * sum * dt - vol[k][k] * vol[k][k]/2.0 * dt + sqDt * gaussS(k-Ta,n); // gaussS(k-Ta,n)
             }
             //print(exp(lnF));
         }
@@ -80,6 +85,7 @@ template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & co
         T floating_swap_rate;
         floating_swap_rate = SR_from_F(F, yearly_payments, (int)(Ta), (int)(Tb) );
         //print("floating_swap_rate is ", floating_swap_rate);
+        lnRates[i] = log(floating_swap_rate);
         
         T diff_rates;
         diff_rates = max(floating_swap_rate - r_fix, 0.0);  // Payer: floating_swap_rate - r_fix
@@ -92,15 +98,39 @@ template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & co
             // Discount back to time Ta
             T disc = DF_from_F(F, yearly_payments, int(Ta), int(Ta) + 1 + j);
             //print("Disc is ", disc, " from time ", int(Ta), " to time ", int(Ta) + 1 + j, " ", disc * diff_rates * notional);
-            val += disc * diff_rates * notional;
+            val += disc ;
         }
         //print("val is ", val);
-        res += val;
-
+        res += val * diff_rates * notional;
         avg_float += floating_swap_rate;
     }
-    print("avg_float is ", avg_float/double(nPaths));
+    double avg = avg_float/double(nPaths);
+    print("avg_float is ", avg);
+    double lnMean = sum(lnRates)/double(nPaths);
+    
     print("count is ", count);
+    
+    double std = 0;
+    double kurtosis = 0;
+    double skewtop = 0.0;
+    double skewbot = 0.0;
+    
+    for(int i = 0; i<nPaths; i++){
+        std +=      pow(lnRates[i] - lnMean, 2.0)/nPaths;
+        kurtosis += pow(lnRates[i] - lnMean, 4.0)/nPaths;
+        skewtop +=  pow(lnRates[i] - lnMean, 3.0)/nPaths;
+        skewbot +=  pow(lnRates[i] - lnMean, 2.0)/(nPaths-1);
+    }
+    double skew = skewtop/ pow(skewbot, 1.5);
+    std = sqrt(std);
+    kurtosis /= pow(std,4.0);
+
+    print("std is ", std);
+    print("kurtosis is ", kurtosis);
+    print("skew is ", skew);
+
+    //print(rates);
+    
     // Discounting back to time t:
     T disc;
     disc = DF_from_F(initF, yearly_payments, int(t), int(Ta));
@@ -110,27 +140,3 @@ template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & co
 
 
 #endif /* LMM_h */
-
-/*
- T lnF1 = log(initF[0]);
- T lnF2 = log(initF[1]);
- T lnF3 = log(initF[2]);
- lnF1 += vol[0][0] *
-corr[0][0] * 1/yearly_payments * vol[0][0] * exp(lnF1) / (1 + 1/yearly_payments * exp(lnF1)) * dt - vol[0][0] * vol[0][0]/2.0 * dt + vol[0][0] * sqDt * gauss[n];
-                   
-lnF2 += vol[1][1] *
-( corr[1][0] * 1/yearly_payments * vol[0][0] * exp(lnF1) / (1 + 1/yearly_payments * exp(lnF1))
- +
-  corr[1][1] * 1/yearly_payments * vol[1][1] * exp(lnF2) / (1 + 1/yearly_payments * exp(lnF2))
- ) * dt
-- vol[1][1] * vol[1][1]/2.0 * dt + vol[1][1] * sqDt * gauss[n + nSteps];
-
-lnF3 += vol[2][2] *
-( corr[2][0] * 1/yearly_payments * vol[0][0] * exp(lnF1) / (1 + 1/yearly_payments * exp(lnF1))
- +
-  corr[2][1] * 1/yearly_payments * vol[1][1] * exp(lnF2) / (1 + 1/yearly_payments * exp(lnF2))
- +
-  corr[2][2] * 1/yearly_payments * vol[2][2] * exp(lnF3) / (1 + 1/yearly_payments * exp(lnF3))
- ) * dt
-- vol[2][2] * vol[2][2]/2.0 * dt + vol[2][2] * sqDt * gauss[n + nSteps*2];
-cout << exp(lnF1) << " " << exp(lnF2) << " " << exp(lnF3) << endl;*/

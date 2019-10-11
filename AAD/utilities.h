@@ -62,5 +62,13 @@ vector<T> exp(vector<T>& input_vec) {
     }
     return res;
 }
+template<class T>
+T sum(vector<T>& input_vec) {
+    T res(0.0);
+    for( auto &x : input_vec) {
+        res += x;
+    }
+    return res;
+}
 
 #endif /* utilities_h */
