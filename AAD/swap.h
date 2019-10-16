@@ -43,24 +43,14 @@ template<class T> T DF_from_F(T forward, T yearly_payments){
     return 1.0/(1.0 + 1.0/yearly_payments * forward);
 }
 
-template<class T> T DF_from_F(vector<T> forwards, T yearly_payments){ //, T Ta, T Tb){
-    // Computes discount factor from Ta to Tb, given forward rates from Ta to Tb
-    T prod(1.0);
-       
-    // Loop from time alpha + 1, which is i=0 here, to end of forwards vector (beta)
-    for(int i = 0; i<forwards.size(); ++i ) {
-       prod *= DF_from_F(forwards[i], yearly_payments);
-    }
-    return prod;
-}
-
 template<class T> T DF_from_F(vector<T> forwards, T yearly_payments, int entry1, int entry2){ //, T Ta, T Tb){
     // Computes discount factor from Ta to Tb, given forward rates from Ta to Tb
     T prod(1.0);
        
-    // Loop from time alpha + 1, which is i=0 here, to end of forwards vector (beta)
+    // Loop from time alpha + 1, which is i=0 here to (beta)
     for(int i = entry1; i<entry2; ++i ) {
-       prod *= DF_from_F(forwards[i], yearly_payments);
+        prod *= DF_from_F(forwards[i], yearly_payments);
+        //print("i in DF is ", i, " ", forwards[i] );
     }
     return prod;
 }
@@ -68,11 +58,9 @@ template<class T> T DF_from_F(vector<T> forwards, T yearly_payments, int entry1,
 template<class T> T C_ab(vector<T> forwards, T yearly_payments, int entry1, int entry2){
     // Computes discount factor from Ta to Tb, given forward rates from Ta to Tb
     T sum(0.0);
-       
-    // Loop from time alpha + 1, which is i=0 here
     for(int i = entry1; i<entry2; ++i ) {
-        //vector<T> sub_forwards(forwards.begin(), forwards.begin() + i + 1);
         sum += DF_from_F(forwards[i], yearly_payments);
+        //print("Cab i is ", i, " sum is ", sum);
     }
     return sum;
 }
@@ -102,7 +90,7 @@ template<class T> T vol_TFM(vector<T> forwards, T yearly_payments, T Ta,
     // Rebonatos formula, 6.67 in Brigo. Works for time independent vol only, as specification in Table 3
     T res(0.0);
     
-    for(int i = start_idx; i<forwards.size(); ++i){
+    for(int i = start_idx; i<forwards.size(); ++i){ // F10,...,F19
         for(int j = start_idx; j<forwards.size(); ++j){
             //print("i is ", i, " j is ", j);
             res += w(forwards, yearly_payments, double(i), start_idx ) * w(forwards, yearly_payments, double(j), start_idx ) *
@@ -160,18 +148,18 @@ template<class T> T SR_from_F(vector<T> forwards, T yearly_payments, int entry_f
     T prod(1.0);
     T prod2(1.0);
     T sum(0.0);
-    
+    //print("SR from F called for ", entry_first, " to ", entry_last);
     // Loop from time alpha + 1 to beta
     for(int i = entry_first; i < entry_last; ++i ) {
         prod *= DF_from_F(forwards[i], yearly_payments);
-        //print("DF in SR for F" , i+1, " is ", DF_from_F(forwards[i], yearly_payments));
+        //print("DF in SR for F" , i, " is ", DF_from_F(forwards[i], yearly_payments), " ", forwards[i] );
     }
     
     for(int i = entry_first; i<entry_last; ++i ) {
         prod2 = 1.0;
         for(int j = entry_first; j<i+1; ++j) {
             prod2 *= DF_from_F(forwards[j], yearly_payments);
-            //print(j, " ", prod2);
+            //print("DF in SR for F i is ", i, " j ",  j, " is ", DF_from_F(forwards[j], yearly_payments));
         }
         sum += 1.0/yearly_payments * prod2;
     }
@@ -179,12 +167,12 @@ template<class T> T SR_from_F(vector<T> forwards, T yearly_payments, int entry_f
     return (1.0 - prod) / sum;
 }
 
-template<class T> T SR_from_F(vector<T> forwards, T yearly_payments){
+/*template<class T> T SR_from_F(vector<T> forwards, T yearly_payments){
     // Compute swap rate from forward rates. Eq. 6.33 in Brigo.
     // Assumes first entry is first rate needed
 
     return SR_from_F(forwards, yearly_payments, 0, int(forwards.size()) );
-}
+}*/
 
 
 

@@ -33,23 +33,21 @@ int main(int argc, const char * argv[]) {
    
     //test_heston();
     //test_vasicek();
+    double t , notional, Ta, Tb, yearly_payments,  r_fix;
+    int seed1, nSteps, nPaths, M;
     
-    /*clock_t begin_time = clock();
-    lsm(200000, 50);
-    auto time_aad =  float( clock () - begin_time )/  CLOCKS_PER_SEC;
-    cout << "Calculation time: " << time_aad  << " seconds" << endl;
-    double res = bsMonteCarlo(100, 0.2, 1, 100, 123, 234);
-    cout << "Result is " <<  res <<  endl;*/
-
     
-    int seed1 = 434;
-    int nSteps = 4, nPaths = 100000;
-    double t = 0.0;
+    seed1 = 56;
+    nSteps = 4;
+    nPaths = 10000;
+    t = 0.0;
     
-    double Ta = 1.0, Tb = 4.0, yearly_payments = 1.0;
-    double notional = 100.0, r_fix;
+    Ta = 1.0;
+    Tb = 4.0;
+    yearly_payments = 1.0;
+    notional = 100.0;
     
-    int M = 4; // Dimension of forward curve
+    M = 4; // Dimension of forward curve
     vector<vector<double>> vol(M,  vector<double>(M));
     vector<vector<double>> corr(M, vector<double>(M));
     vector<double> F = {0.01, 0.02, 0.03, 0.04};
@@ -108,67 +106,73 @@ int main(int argc, const char * argv[]) {
     // Test case as in 8.2 in Brigo
     
     print("\nTEST CASE: ");
+    t = 0.0;
+    notional = 100.0;
     Ta = 9;
     Tb = 20;
+    yearly_payments = 1.0;
     vector<double> F20 = {0.0469, 0.0501, 0.0560, 0.0584, 0.0600, 0.0613, 0.0628, 0.0627, 0.0629, 0.0623,
                           0.0630, 0.0636, 0.0643, 0.0648, 0.0653, 0.0640, 0.0630, 0.0618, 0.0607, 0.0594 };
     
     // Test 1.b, formulation 7 with a=0, b=0, c=1, d=0, all correlations set to 1
     M = 20;
-    vector<vector<double>> vol20(M,  vector<double>(M));
-    vector<vector<double>> corr20(M, vector<double>(M));
+    vector<vector<double>> vol20(M, vector<double>(M));
+    vector<vector<double>> corrA(M, vector<double>(M));
+    vector<vector<double>> corrB(M, vector<double>(M));
 
-    double swap_rate20 = SR_from_F(F20, yearly_payments, int(Ta)+1, int(Tb));
+    double swap_rate20 = SR_from_F(F20, yearly_payments, int(Ta), int(Tb)); // 9'th entry is F10,
     print( "Swap rate is ", swap_rate20 );
     r_fix = swap_rate20;
     
     vector<double> Phi = {
-        0.000, 0.149, 0.159, 0.153, 0.1450, 0.1360, 0.1270, 0.1210, 0.1180, 0.1140,
+        -1000, 0.149, 0.159, 0.153, 0.1450, 0.1360, 0.1270, 0.1210, 0.1180, 0.1140,
         0.111, 0.108, 0.105, 0.102, 0.0989, 0.0978, 0.0974, 0.0969, 0.0965, 0.0961};
+    vector<double> Theta = {
+        0.0147, 0.0643, 0.1032, 0.1502, 0.1969, 0.2239, 0.2771, 0.2950,
+        0.3630, 0.3810, 0.4217, 0.4836, 0.5204, 0.5418, 0.5791, 0.6496,
+        0.6679, 0.7126, 0.7659};
+
     // Fill Vol and corr
     for(int i = 0; i<M; i++){
         for(int j = 0; j<M; j++){
-            corr20[i][j] = 1.0;
-            vol20[i][j] = (i == j) & (i>0) & (j>0) ? Phi[i] : 0.0;
+            //corrB[i][j] = 1.0;
+            vol20[i][j] = (i == j) & (i>0) & (j>0) ? Phi[i] : -10000.0;
+            corrA[i][j] = (i>0) & (j>0) ? cos( Theta[i-1] - Theta[j-1]) : -10000;
         }
     }
+    //print(corrA);
+    
     double sum2 = 0.0;
-    for(int i = int(Ta)+1; i<int(Tb); ++i){
-        double weight = w(F20, yearly_payments, double(i), int(Ta)+1);
+    for(int i = int(Ta); i<int(Tb); ++i){
+        double weight = w(F20, yearly_payments, double(i), int(Ta));
         sum2 += weight * F20[i];
     }
     print("swap rate from weights is ", sum2);
 
-    double rebonato2 = sqrt(vol_TFM(F20, yearly_payments, Ta, corr20, vol20, swap_rate20, int(Ta) + 1) );
+    double rebonato2 = sqrt(vol_TFM(F20, yearly_payments, Ta, corrA, vol20, swap_rate20, int(Ta) + 1) );
     print("Rebonato vol is ", rebonato2/sqrt(Ta));
     
     double C = C_ab( F20, yearly_payments, int(Ta)+1, int(Tb));
     
     // Black(T K, T F0, T vol)
-    disc = DF_from_F(F20, yearly_payments, t, Ta);
-    print("Disc is ", disc);
+    double disc2 = DF_from_F(F20, yearly_payments, t, Ta);
+    print("Disc is ", disc2);
     
     double black20 = BlackCall( swap_rate20, swap_rate20, rebonato2);
-    print("Black price ", disc * C * notional * black20 );
-    
-    //mat X = randn<mat>(5,5);
-    //mat Y = X.t()*X;
-    //mat R1 = chol(Y);
-    //mat R2 = chol(Y, "lower");
+    print("Black price ", disc2 * C * notional * black20 );
 
     nSteps = 20;
-    nPaths = 20000;
+    nPaths = 10000;
     
     double lmm20 = -1.0;
-
-
-    lmm20 = LMM_swaption(vol20, corr20, F20, t, Ta, Tb, r_fix, notional,
+    clock_t begin_time2 = clock();
+    lmm20 = LMM_swaption(vol20, corrA, F20, t, Ta, Tb, r_fix, notional,
                           seed1, nPaths, nSteps, yearly_payments);
-    time =  float( clock () - begin_time )/ CLOCKS_PER_SEC;
+    auto time2 =  float( clock () - begin_time2 )/ CLOCKS_PER_SEC;
     print("LMM Swaption price is ", lmm20);
-    print("Calculation time: ", time, " seconds");
+    print("Calculation time: ", time2, " seconds");
     
-    double BlackImpVol = BlackiVol(swap_rate20, swap_rate20, lmm20 / (disc * C * notional) );
+    double BlackImpVol = BlackiVol(swap_rate20, swap_rate20, lmm20 / (disc2 * C * notional) );
     print("Black implied vol of simulation is ", BlackImpVol/sqrt(Ta) );
     
     return 0;

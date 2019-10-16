@@ -113,7 +113,7 @@ inline double invNormalCdf( const double p)
 }
 
 
-/*inline arma::mat mvn_rnd(arma::vec means, arma::mat Cov, int nSteps) {
+inline arma::mat mvn_rnd(arma::vec means, arma::mat Cov, int nSteps) {
     print(arma::size(means));
     arma::mat mvr_gauss(1, nSteps);
     
@@ -123,6 +123,6 @@ inline double invNormalCdf( const double p)
     
     
     return mvr_gauss;
-}*/
+}
 
 #endif /* gaussians_h */
