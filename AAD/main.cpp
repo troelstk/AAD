@@ -34,15 +34,16 @@ int main(int argc, const char * argv[]) {
     //test_heston();
     //test_vasicek();
     double t , notional, Ta, Tb, yearly_payments,  r_fix;
-    int seed1, nSteps, nPaths, M;
+    int seed1, nSteps, nPaths, M, dim_n;
     
     
-    seed1 = 56;
+    seed1 = 5989;
+    dim_n = 2;
     nSteps = 4;
-    nPaths = 10000;
-    t = 0.0;
+    nPaths = 200000;
     
-    Ta = 1.0;
+    t = 0.0;
+    Ta = 1.0; // Payment at time 2, 3 and 4
     Tb = 4.0;
     yearly_payments = 1.0;
     notional = 100.0;
@@ -50,11 +51,11 @@ int main(int argc, const char * argv[]) {
     M = 4; // Dimension of forward curve
     vector<vector<double>> vol(M,  vector<double>(M));
     vector<vector<double>> corr(M, vector<double>(M));
-    vector<double> F = {0.01, 0.02, 0.03, 0.04};
+    vector<double> F = {0.01, 0.02, 0.03, 0.04}; // F_1, F_2, F_3, F_4
     double swap_rate = SR_from_F(F, yearly_payments, int(Ta), int(Tb));
     print( "Swap rate is ", swap_rate );
     r_fix = swap_rate;
-    vector<double> r_fix_vec = {0.05, 0.01, 0.02, swap_rate, 0.035, 0.04, 0.045};
+    //vector<double> r_fix_vec = {0.05, 0.01, 0.02, swap_rate, 0.035, 0.04, 0.045};
     
     // Table 3: Constant vol for each F regardless of time t
     vol[0] = {0.20, 0.00, 0.00, 0.00};
@@ -70,8 +71,8 @@ int main(int argc, const char * argv[]) {
     // Bør lave mere sofistikeret corr
     
     clock_t begin_time = clock();
-
-    double lmm = LMM_swaption(vol, corr, F, t, Ta, Tb, r_fix, notional, seed1, nPaths, nSteps, yearly_payments);
+    
+    double lmm = LMM_swaption(vol, corr, F, t, Ta, Tb, r_fix, notional, seed1, nPaths, nSteps, yearly_payments, dim_n);
     auto time =  float( clock () - begin_time )/ CLOCKS_PER_SEC;
     print("LMM Swaption price is ", lmm);
     print("Calculation time: ", time, " seconds");
@@ -89,6 +90,7 @@ int main(int argc, const char * argv[]) {
     print("Rebonato vol is ", rebonato);
     
     double Cab = C_ab( F, yearly_payments, int(Ta), int(Tb));
+    print("Cab is ", Cab);
     // Black(T K, T F0, T vol)
     double black = Cab * BlackCall( r_fix, swap_rate, rebonato);
     
@@ -106,11 +108,13 @@ int main(int argc, const char * argv[]) {
     // Test case as in 8.2 in Brigo
     
     print("\nTEST CASE: ");
+    // T0 = 1y = 1.0
     t = 0.0;
-    notional = 100.0;
     Ta = 9;
     Tb = 20;
+    dim_n = 4;
     yearly_payments = 1.0;
+    notional = 100.0;
     vector<double> F20 = {0.0469, 0.0501, 0.0560, 0.0584, 0.0600, 0.0613, 0.0628, 0.0627, 0.0629, 0.0623,
                           0.0630, 0.0636, 0.0643, 0.0648, 0.0653, 0.0640, 0.0630, 0.0618, 0.0607, 0.0594 };
     
@@ -141,33 +145,27 @@ int main(int argc, const char * argv[]) {
         }
     }
     //print(corrA);
-    
-    double sum2 = 0.0;
-    for(int i = int(Ta); i<int(Tb); ++i){
-        double weight = w(F20, yearly_payments, double(i), int(Ta));
-        sum2 += weight * F20[i];
-    }
-    print("swap rate from weights is ", sum2);
 
     double rebonato2 = sqrt(vol_TFM(F20, yearly_payments, Ta, corrA, vol20, swap_rate20, int(Ta) + 1) );
     print("Rebonato vol is ", rebonato2/sqrt(Ta));
     
-    double C = C_ab( F20, yearly_payments, int(Ta)+1, int(Tb));
-    
+    double C = C_ab( F20, yearly_payments, int(Ta), int(Tb));
+    print("C is ", C);
     // Black(T K, T F0, T vol)
     double disc2 = DF_from_F(F20, yearly_payments, t, Ta);
-    print("Disc is ", disc2);
     
     double black20 = BlackCall( swap_rate20, swap_rate20, rebonato2);
     print("Black price ", disc2 * C * notional * black20 );
-
-    nSteps = 20;
-    nPaths = 10000;
+    double BlackImpVol3 = BlackiVol(swap_rate20, swap_rate20, black20 );
+    print("Black20 implied vol is ", BlackImpVol3/sqrt(Ta) );
+    
+    
+    nSteps = 45;
+    nPaths = 20000;
     
     double lmm20 = -1.0;
     clock_t begin_time2 = clock();
-    lmm20 = LMM_swaption(vol20, corrA, F20, t, Ta, Tb, r_fix, notional,
-                          seed1, nPaths, nSteps, yearly_payments);
+    lmm20 = LMM_swaption(vol20, corrA, F20, t, Ta, Tb, r_fix, notional, seed1, nPaths, nSteps, yearly_payments, dim_n);
     auto time2 =  float( clock () - begin_time2 )/ CLOCKS_PER_SEC;
     print("LMM Swaption price is ", lmm20);
     print("Calculation time: ", time2, " seconds");

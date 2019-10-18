@@ -55,12 +55,13 @@ template<class T> T DF_from_F(vector<T> forwards, T yearly_payments, int entry1,
     return prod;
 }
 
-template<class T> T C_ab(vector<T> forwards, T yearly_payments, int entry1, int entry2){
+template<class T> T C_ab(vector<T> forwards, T yearly_payments, int Ta, int Tb){
     // Computes discount factor from Ta to Tb, given forward rates from Ta to Tb
     T sum(0.0);
-    for(int i = entry1; i<entry2; ++i ) {
-        sum += DF_from_F(forwards[i], yearly_payments);
-        //print("Cab i is ", i, " sum is ", sum);
+    for(int i = Ta+1; i<=Tb; ++i ) {
+        //sum += DF_from_F(forwards[i], yearly_payments);
+        sum += DF_from_F(forwards, yearly_payments, Ta, i );
+        //print("Cab i is ", i, " DF is ",   " sum is ", sum);
     }
     return sum;
 }

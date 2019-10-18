@@ -87,6 +87,7 @@
 			isa = PBXGroup;
 			children = (
 				9F0B0E432338AE1E009C35DD /* utilities.h */,
+				9FDC5C4D2354BEA6006E42D1 /* div.h */,
 				9FF6D2AD232A7CBC00B4CAED /* mrg32k3a.h */,
 				9FF6D2AB232A6D6300B4CAED /* armadillo.hpp */,
 				9FDB0C31232278CF00B048BB /* Heston.h */,
@@ -101,7 +102,6 @@
 				9FF6D2AE232BC9B700B4CAED /* vasicek.h */,
 				9FD1777D232F694800D6C6A2 /* swap.h */,
 				9F0B0E422337AC03009C35DD /* LMM.h */,
-				9FDC5C4D2354BEA6006E42D1 /* div.h */,
 				9FF22907231D562E00EF06F1 /* main.cpp */,
 			);
 			path = AAD;
