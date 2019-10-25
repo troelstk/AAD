@@ -40,7 +40,7 @@ int main(int argc, const char * argv[]) {
     seed1 = 5989;
     dim_n = 2;
     nSteps = 4;
-    nPaths = 200000;
+    nPaths = 10;
     
     t = 0.0;
     Ta = 1.0; // Payment at time 2, 3 and 4
@@ -90,20 +90,26 @@ int main(int argc, const char * argv[]) {
     print("Rebonato vol is ", rebonato);
     
     double Cab = C_ab( F, yearly_payments, int(Ta), int(Tb));
-    print("Cab is ", Cab);
+    //print("Cab is ", Cab);
     // Black(T K, T F0, T vol)
     double black = Cab * BlackCall( r_fix, swap_rate, rebonato);
     
     double disc = DF_from_F(F[0], 1.0);
     
-    //print("Disc is ", disc);
     print("Black price ", disc * black * notional);
+    
+    vector<double> exTimes = {0.0, 1.0, 2.0, 3.0}; 
+    
+    int nPaths_presim = 10;
+    nPaths = 5;
+    int nSteps_y = 4;
+    
+    double bermudan = LMM_BermudaSwaption(vol, corr, F, exTimes, t, Ta, Tb, r_fix, notional, seed1, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
 
+    print("Bermuda price is ", bermudan);
     
     
-    
-    
-    
+  
     
     // Test case as in 8.2 in Brigo
     
@@ -161,11 +167,11 @@ int main(int argc, const char * argv[]) {
     
     
     nSteps = 45;
-    nPaths = 20000;
+    nPaths = 10000;
     
     double lmm20 = -1.0;
     clock_t begin_time2 = clock();
-    lmm20 = LMM_swaption(vol20, corrA, F20, t, Ta, Tb, r_fix, notional, seed1, nPaths, nSteps, yearly_payments, dim_n);
+    //lmm20 = LMM_swaption(vol20, corrA, F20, t, Ta, Tb, r_fix, notional, seed1, nPaths, nSteps, yearly_payments, dim_n);
     auto time2 =  float( clock () - begin_time2 )/ CLOCKS_PER_SEC;
     print("LMM Swaption price is ", lmm20);
     print("Calculation time: ", time2, " seconds");
@@ -175,3 +181,43 @@ int main(int argc, const char * argv[]) {
     
     return 0;
 }
+
+
+/*  mat X(5, 3, fill::ones);
+  X(0,1) = 1.08;
+  X(1,1) = 1.07;
+  X(2,1) = 0.97;
+  X(3,1) = 0.77;
+  X(4,1) = 0.84;
+  for(int i= 0; i<5; ++i){
+      X(i, 2) = pow(X(i, 1), 2.0);
+  }
+  
+  //print(X);
+
+  mat U;
+  vec s;
+  mat V;
+  mat D(5,3, fill::zeros);
+  mat Sig(5,5, fill::zeros);
+  vec Y = {0, 0.07 * 0.94176, 0.18 * 0.94176, 0.20 * 0.94176, 0.09 * 0.94176};
+
+  svd(U,s,V,X);
+  
+  double lambda = 0.0; // Tikhonov parameter
+  
+  for(int i =0; i<3 ; ++i){
+      D(i,i) = s(i);
+      Sig(i,i) = 1.0/(s(i)*s(i) + lambda*lambda );
+  }
+  mat X2 = U * D * V.t() ;
+  
+  //print(X2);
+  
+  print(size(V));
+  print(size(D));
+  print(size(U.t()));
+  
+  vec beta = V * D.t() * Sig * U.t() * Y ;
+  
+  print(beta);*/

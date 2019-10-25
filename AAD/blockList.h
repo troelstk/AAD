@@ -22,12 +22,12 @@ class blockList
     // The data type we store data in, list of arrays of numbers(T) with specified block_size
     list<array<T, block_size>> data;
     
-    // Define iterators of the same type as first array in data list
+    // Define iterators of the same type as first array in data list (a list)
     using list_iter = decltype(data.begin());
     list_iter  cur_block; // Current block
     list_iter  last_block; // Last block in list
     
-    // Define iterators of the same type as first element in last array in data
+    // Define iterators of the same type as first element in last array in data (an element in a block)
     using block_iter = decltype(data.back().begin());
     block_iter  next_space; // next available space
     block_iter  last_space; // last available space

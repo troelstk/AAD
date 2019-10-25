@@ -62,6 +62,7 @@ vector<T> exp(vector<T>& input_vec) {
     }
     return res;
 }
+
 // Sum of a vector
 template<class T>
 T sum(vector<T>& input_vec) {
@@ -72,13 +73,19 @@ T sum(vector<T>& input_vec) {
     return res;
 }
 
+// Mean of a vector
+template<class T>
+T mean(vector<T>& input_vec) {
+    return sum(input_vec)/double(input_vec.size());
+}
+
 template<class T>
 T stdev(vector<T>& input_vec) {
     T stdev(0.0);
-    T mean = sum(input_vec)/double(input_vec.size()) ;
+    T Mean = mean(input_vec);
     
     for(auto &x : input_vec){
-        stdev += pow(x - mean, 2.0) ;
+        stdev += pow(x - Mean, 2.0) ;
     }
     stdev /= double(input_vec.size());
     
@@ -88,11 +95,11 @@ T stdev(vector<T>& input_vec) {
 template<class T>
 T skew(vector<T>& input_vec) {
     T skew(0.0), skewtop(0.0), skewbot(0.0);
-    T mean = sum(input_vec)/double(input_vec.size()) ;
+    T Mean = mean(input_vec);
     
     for(auto &x : input_vec){
-        skewtop +=  pow(x - mean, 3.0)/double(input_vec.size());
-        skewbot +=  pow(x - mean, 2.0)/(double(input_vec.size())-1.0);
+        skewtop +=  pow(x - Mean, 3.0)/double(input_vec.size());
+        skewbot +=  pow(x - Mean, 2.0)/(double(input_vec.size())-1.0);
     }
     skew = skewtop/ pow(skewbot, 1.5);
     
@@ -102,10 +109,10 @@ T skew(vector<T>& input_vec) {
 template<class T>
 T kurtosis(vector<T>& input_vec) {
     T kurtosis(0.0);
-    T mean = sum(input_vec)/double(input_vec.size()) ;
+    T Mean = mean(input_vec);
     
     for(auto &x : input_vec){
-        kurtosis += pow(x - mean, 4.0)/double(input_vec.size());
+        kurtosis += pow(x - Mean, 4.0)/double(input_vec.size());
     }
     kurtosis /= pow(stdev(input_vec),4.0);
     

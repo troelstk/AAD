@@ -23,13 +23,13 @@ inline void putOnTape(IT begin, IT end)
 }
 
 // Convert a range of numbers/doubles to doubles/numbers
-template<class IT1, class IT2>
+/*template<class IT1, class IT2>
 inline void convertCollection(IT1 srcBegin, IT1 srcEnd, IT2 destBegin)
 {
     using destType = remove_reference_t<decltype(*destBegin)>;
     transform(srcBegin, srcEnd, destBegin,
               [](const auto& source){return destType(source);});
-}
+}*/
 
 
 
