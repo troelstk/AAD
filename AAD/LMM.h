@@ -226,33 +226,34 @@ template<class T> T LMM_BermudaSwaption(vector<vector<T>> & vol, vector<vector<T
     vec s;
     mat V;
     double lambda = 0.0; // Tikhonov parameter
+    int no_basis_funcs = 3;
     
     // Exercise value at last exercise time
     vec Y(nPaths_presim);
     vec payoff(nPaths_presim);
     for(int i = 0; i<nPaths_presim; ++i){
         payoff(i) = swap_vals[i][exTimes.size() - 1];
-        print("Payoff at time t= ", exTimes.size() - 1, " is ", payoff(i));
+        //print("Payoff at time t= ", exTimes.size() - 1, " is ", payoff(i));
     }
     
     // Backwards loop:
     for(int t = int(exTimes.size() - 2); t >= 1; --t ){
-        print("exTime is ", exTimes[t], " t is ", t);
+        //print("exTime is ", exTimes[t], " t is ", t);
         
-        mat X(nPaths_presim, 5, fill::zeros); // 5 er antal basis funktioner
+        mat X(nPaths_presim, no_basis_funcs, fill::zeros); // 5 er antal basis funktioner
         
         for(int i = 0; i<nPaths_presim; ++i){
             X(i, 0) = 1;
             X(i, 1) = SR[i][t];
-            X(i, 2) = X(i, 1)*X(i, 1);
-            X(i, 3) = Libor[i][t];
-            X(i, 4) = X(i, 3)*X(i, 3);
+            X(i, 2) = Libor[i][t];
+            //X(i, 3) = X(i, 2)*X(i, 2);
+            //X(i, 4) = X(i, 1)*X(i, 1);
             Y(i) =  payoff(i)/( 1.0 + Libor[i][t] );
         }
         // Do SVD:
         svd(U,s,V,X);
         
-        mat D(nPaths_presim, 5, fill::zeros);
+        mat D(nPaths_presim, no_basis_funcs, fill::zeros);
         mat Sig(nPaths_presim, nPaths_presim, fill::zeros);
 
         
@@ -263,23 +264,27 @@ template<class T> T LMM_BermudaSwaption(vector<vector<T>> & vol, vector<vector<T
         
         vec beta = V * D.t() * Sig * U.t() * Y ;
         
-        print(beta);
-        print("E[Y|X] is " );
-        print(X*beta);
+        //string fileName = "/Users/Troels/Dropbox/Uni/Speciale/output" + to_string(t) + ".txt";
+        //writeToFile(fileName, X);
+       
+        //print("Beta is ");
+        //print(beta);
+        //print("E[Y|X] is " );
+        //print(X*beta);
         
         vec EY = X*beta;
         
-        print("Ex val is");
+        //print("Ex val is");
         for(int i = 0; i<nPaths_presim; ++i){
-            print( swap_vals[i][t]  );
+            //print( swap_vals[i][t]  );
         }
         
         for(int i = 0; i<nPaths_presim; ++i){
-            print( "Exercise now: ", swap_vals[i][t] > EY[i] );
+            //print( "Exercise now: ", swap_vals[i][t] > EY[i] );
             if(swap_vals[i][t] > EY[i]){
                 payoff(i) = swap_vals[i][t] ;
             }
-            print("Payoff is ", payoff(i));
+            //print("Payoff is ", payoff(i));
             payoff(i) /=  (1.0 + Libor[i][t]);
         }
         
@@ -294,6 +299,92 @@ template<class T> T LMM_BermudaSwaption(vector<vector<T>> & vol, vector<vector<T
 
 
 #endif /* LMM_h */
+
+void dummyFunc() {
+    // Working american option pricing example from LS:
+    int nPaths_presim = 8;
+    mat U;
+    vec s;
+    mat V;
+    double lambda = 0.0; // Tikhonov parameter
+    int no_basis_funcs = 3;
+
+    // Exercise value at last exercise time
+
+    vec payoff(nPaths_presim);
+    mat LSstock = {
+      {1.09, 1.08, 1.34},
+      {1.16, 1.26, 1.54},
+      {1.22, 1.07, 1.03},
+      {0.93, 0.97, 0.92},
+      {1.11, 1.56, 1.52},
+      {0.76, 0.77, 0.90},
+      {0.92, 0.84, 1.01},
+      {0.88, 1.22, 1.34} };
+
+    print(LSstock);
+    for(int i = 0; i<nPaths_presim; ++i){
+      payoff(i) = max(1.1 - LSstock(i,2), 0.0);
+      print("Payoff at time t= ", 2, " is ", payoff(i));
+    }
+    
+    // Backwards loop:
+    for(int t = 2; t >= 1; --t ){
+      vector<double> ITMpaths;
+      vector<double> ITMY;
+      vector<int> indices;
+      for(int i = 0; i<nPaths_presim; ++i){
+          payoff(i) /=  (1.06);
+      }
+      // Find in the money paths
+      for(int i = 0; i<nPaths_presim; ++i){
+          if(1.1 - LSstock(i,t-1) > 0.0) {
+              ITMpaths.push_back(LSstock(i,t-1));
+              ITMY.push_back(payoff(i));
+              indices.push_back(i);
+          };
+      }
+      size_t ITMsize = ITMpaths.size();
+      
+      mat X(ITMsize, no_basis_funcs, fill::zeros);
+      vec Y(ITMsize);
+
+      
+      for(int i = 0; i<ITMsize; ++i){
+          X(i, 0) = 1;
+          X(i, 1) = ITMpaths[i];
+          X(i, 2) = X(i, 1)*X(i, 1);
+      }
+      // Do SVD:
+      svd(U,s,V,X);
+      
+      mat D(ITMsize, no_basis_funcs, fill::zeros);
+      mat Sig(ITMsize, ITMsize, fill::zeros);
+
+      
+      for(int i=0; i<s.n_rows; ++i){
+          D(i,i) = s(i);
+          Sig(i,i) = 1.0/(s(i)*s(i) + lambda*lambda );
+      }
+      
+      vec beta = V * D.t() * Sig * U.t() * vec(ITMY);
+      
+      vec EY = X * beta;
+      
+      for(int i = 0; i<ITMsize; ++i){
+          if( max(1.1 - ITMpaths[i], 0.0) > EY[i]){
+              payoff(indices[i]) = max(1.1 - ITMpaths[i], 0.0) ;
+          }
+      }
+
+      
+    } // Exercise times
+
+    double sumPayoff = arma::sum(payoff)/8.0;
+
+    print("Am option price is ", sumPayoff/1.06);
+    
+}
 
 /*print("Simulated swap rates");
 print(exp(lnRates));

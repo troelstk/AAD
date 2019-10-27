@@ -37,10 +37,10 @@ int main(int argc, const char * argv[]) {
     int seed1, nSteps, nPaths, M, dim_n;
     
     
-    seed1 = 5989;
+    seed1 = 59;
     dim_n = 2;
     nSteps = 4;
-    nPaths = 10;
+    nPaths = 100;
     
     t = 0.0;
     Ta = 1.0; // Payment at time 2, 3 and 4
@@ -100,16 +100,23 @@ int main(int argc, const char * argv[]) {
     
     vector<double> exTimes = {0.0, 1.0, 2.0, 3.0}; 
     
-    int nPaths_presim = 10;
+    int nPaths_presim = 10000;
     nPaths = 5;
     int nSteps_y = 4;
     
+    clock_t begin_timeBswap = clock();
+    
     double bermudan = LMM_BermudaSwaption(vol, corr, F, exTimes, t, Ta, Tb, r_fix, notional, seed1, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
-
-    print("Bermuda price is ", bermudan);
+    auto timeBSwap =  float( clock () - begin_timeBswap )/ CLOCKS_PER_SEC;
+    
+    print("Bermuda price is ", bermudan, ", time ", timeBSwap, " seconds");
+    
+   
     
     
-  
+    
+    
+    
     
     // Test case as in 8.2 in Brigo
     
@@ -183,41 +190,3 @@ int main(int argc, const char * argv[]) {
 }
 
 
-/*  mat X(5, 3, fill::ones);
-  X(0,1) = 1.08;
-  X(1,1) = 1.07;
-  X(2,1) = 0.97;
-  X(3,1) = 0.77;
-  X(4,1) = 0.84;
-  for(int i= 0; i<5; ++i){
-      X(i, 2) = pow(X(i, 1), 2.0);
-  }
-  
-  //print(X);
-
-  mat U;
-  vec s;
-  mat V;
-  mat D(5,3, fill::zeros);
-  mat Sig(5,5, fill::zeros);
-  vec Y = {0, 0.07 * 0.94176, 0.18 * 0.94176, 0.20 * 0.94176, 0.09 * 0.94176};
-
-  svd(U,s,V,X);
-  
-  double lambda = 0.0; // Tikhonov parameter
-  
-  for(int i =0; i<3 ; ++i){
-      D(i,i) = s(i);
-      Sig(i,i) = 1.0/(s(i)*s(i) + lambda*lambda );
-  }
-  mat X2 = U * D * V.t() ;
-  
-  //print(X2);
-  
-  print(size(V));
-  print(size(D));
-  print(size(U.t()));
-  
-  vec beta = V * D.t() * Sig * U.t() * Y ;
-  
-  print(beta);*/

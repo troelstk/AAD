@@ -120,8 +120,20 @@ T kurtosis(vector<T>& input_vec) {
 }
 
 
-
-
+inline void writeToFile(string MyfileName, arma::mat inpMat ){
+    ofstream myfile (MyfileName);
+    if (myfile.is_open())
+    {
+        for(int i = 0; i<inpMat.n_rows; ++i){
+            for(int j = 0; j<inpMat.n_cols; ++j ){
+                myfile << inpMat(i, j) << ",";
+            }
+            myfile << "\n";
+        }
+        myfile.close();
+    }
+    else cout << "Unable to open file\n";
+}
 
 
 
