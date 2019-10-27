@@ -100,7 +100,7 @@ int main(int argc, const char * argv[]) {
     
     vector<double> exTimes = {0.0, 1.0, 2.0, 3.0}; 
     
-    int nPaths_presim = 10000;
+    int nPaths_presim = 1000;
     nPaths = 5;
     int nSteps_y = 4;
     

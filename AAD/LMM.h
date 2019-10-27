@@ -222,6 +222,7 @@ template<class T> T LMM_BermudaSwaption(vector<vector<T>> & vol, vector<vector<T
         disc = DF_from_F(initF, yearly_payments, int(t), int(exTimes[t]));
     } // Exercise dates
     
+    // Find regression coefficients
     mat U;
     vec s;
     mat V;
@@ -233,28 +234,41 @@ template<class T> T LMM_BermudaSwaption(vector<vector<T>> & vol, vector<vector<T
     vec payoff(nPaths_presim);
     for(int i = 0; i<nPaths_presim; ++i){
         payoff(i) = swap_vals[i][exTimes.size() - 1];
-        //print("Payoff at time t= ", exTimes.size() - 1, " is ", payoff(i));
     }
     
     // Backwards loop:
     for(int t = int(exTimes.size() - 2); t >= 1; --t ){
         //print("exTime is ", exTimes[t], " t is ", t);
-        
-        mat X(nPaths_presim, no_basis_funcs, fill::zeros); // 5 er antal basis funktioner
-        
+        vector<double> ITMswapRate, ITMLibor, ITMY;
+        vector<int> indices;
         for(int i = 0; i<nPaths_presim; ++i){
-            X(i, 0) = 1;
-            X(i, 1) = SR[i][t];
-            X(i, 2) = Libor[i][t];
-            //X(i, 3) = X(i, 2)*X(i, 2);
-            //X(i, 4) = X(i, 1)*X(i, 1);
-            Y(i) =  payoff(i)/( 1.0 + Libor[i][t] );
+            payoff(i) /=  (1 + Libor[i][t]);
         }
+        // Find in the money paths
+        for(int i = 0; i<nPaths_presim; ++i){
+            if(payoff(i) > 0) { // If ITM
+                ITMswapRate.push_back(SR[i][t]);
+                ITMLibor.push_back(Libor[i][t]);
+                ITMY.push_back(payoff(i));
+                indices.push_back(i);
+            };
+        }
+        size_t ITMsize = ITMswapRate.size();
+        
+        mat X(ITMsize, no_basis_funcs, fill::zeros);
+
+        
+        for(int i = 0; i<ITMsize; ++i){
+            X(i, 0) = 1;
+            X(i, 1) = ITMswapRate[i];
+            X(i, 2) = ITMLibor[i];
+        }
+
         // Do SVD:
         svd(U,s,V,X);
         
-        mat D(nPaths_presim, no_basis_funcs, fill::zeros);
-        mat Sig(nPaths_presim, nPaths_presim, fill::zeros);
+        mat D(ITMsize, no_basis_funcs, fill::zeros);
+        mat Sig(ITMsize, ITMsize, fill::zeros);
 
         
         for(int i =0; i<s.n_rows; ++i){
@@ -262,32 +276,15 @@ template<class T> T LMM_BermudaSwaption(vector<vector<T>> & vol, vector<vector<T
             Sig(i,i) = 1.0/(s(i)*s(i) + lambda*lambda );
         }
         
-        vec beta = V * D.t() * Sig * U.t() * Y ;
-        
-        //string fileName = "/Users/Troels/Dropbox/Uni/Speciale/output" + to_string(t) + ".txt";
-        //writeToFile(fileName, X);
-       
-        //print("Beta is ");
-        //print(beta);
-        //print("E[Y|X] is " );
-        //print(X*beta);
+        vec beta = V * D.t() * Sig * U.t() * vec(ITMY) ;
         
         vec EY = X*beta;
         
-        //print("Ex val is");
-        for(int i = 0; i<nPaths_presim; ++i){
-            //print( swap_vals[i][t]  );
-        }
-        
-        for(int i = 0; i<nPaths_presim; ++i){
-            //print( "Exercise now: ", swap_vals[i][t] > EY[i] );
-            if(swap_vals[i][t] > EY[i]){
-                payoff(i) = swap_vals[i][t] ;
+        for(int i = 0; i<ITMsize; ++i){
+            if( swap_vals[i][t] > EY[i]){
+                payoff(indices[i]) = swap_vals[i][t] ;
             }
-            //print("Payoff is ", payoff(i));
-            payoff(i) /=  (1.0 + Libor[i][t]);
         }
-        
     } // Exercise times
 
     double sumPayoff = sum(payoff);
@@ -327,7 +324,6 @@ void dummyFunc() {
       payoff(i) = max(1.1 - LSstock(i,2), 0.0);
       print("Payoff at time t= ", 2, " is ", payoff(i));
     }
-    
     // Backwards loop:
     for(int t = 2; t >= 1; --t ){
       vector<double> ITMpaths;
