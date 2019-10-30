@@ -9,6 +9,7 @@
 
 //#include "/usr/local/Cellar/armadillo/9.700.2/include/armadillo"
 
+
 //using namespace arma;
 
 #include <iostream>
@@ -34,7 +35,7 @@ int main(int argc, const char * argv[]) {
     //test_heston();
     //test_vasicek();
     double t , notional, Ta, Tb, yearly_payments,  r_fix;
-    int seed1, nSteps, nPaths, M, dim_n;
+    int seed1, nSteps, nPaths, M, dim_n, seed2;
     
     
     seed1 = 59;
@@ -98,21 +99,20 @@ int main(int argc, const char * argv[]) {
     
     print("Black price ", disc * black * notional);
     
-    vector<double> exTimes = {0.0, 1.0, 2.0, 3.0}; 
+    vector<double> exTimes = {0.0, 1.0, 2.0, 3.0};  // , 2.0, 3.0
     
     int nPaths_presim = 1000;
-    nPaths = 5;
+    nPaths = 100000;
     int nSteps_y = 4;
     
     clock_t begin_timeBswap = clock();
     
-    double bermudan = LMM_BermudaSwaption(vol, corr, F, exTimes, t, Ta, Tb, r_fix, notional, seed1, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
-    auto timeBSwap =  float( clock () - begin_timeBswap )/ CLOCKS_PER_SEC;
+    //double bermudan = LMM_BermudaSwaption(vol, corr, F, exTimes, t, Ta, Tb, r_fix, notional, seed1, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
+    //auto timeBSwap =  float( clock () - begin_timeBswap )/ CLOCKS_PER_SEC;
     
-    print("Bermuda price is ", bermudan, ", time ", timeBSwap, " seconds");
+    //print("Bermuda price is ", bermudan, ", time ", timeBSwap, " seconds");
     
-   
-    
+
     
     
     
@@ -173,18 +173,44 @@ int main(int argc, const char * argv[]) {
     print("Black20 implied vol is ", BlackImpVol3/sqrt(Ta) );
     
     
-    nSteps = 45;
-    nPaths = 10000;
+    nSteps = 36;
+    nPaths = 1000;
     
     double lmm20 = -1.0;
     clock_t begin_time2 = clock();
-    //lmm20 = LMM_swaption(vol20, corrA, F20, t, Ta, Tb, r_fix, notional, seed1, nPaths, nSteps, yearly_payments, dim_n);
+    lmm20 = LMM_swaption(vol20, corrA, F20, t, Ta, Tb, r_fix, notional, seed1, nPaths, nSteps, yearly_payments, dim_n);
     auto time2 =  float( clock () - begin_time2 )/ CLOCKS_PER_SEC;
-    print("LMM Swaption price is ", lmm20);
+    print("LMM EUR Swaption price is ", lmm20);
     print("Calculation time: ", time2, " seconds");
     
     double BlackImpVol = BlackiVol(swap_rate20, swap_rate20, lmm20 / (disc2 * C * notional) );
     print("Black implied vol of simulation is ", BlackImpVol/sqrt(Ta) );
+    
+    nPaths_presim = 1000;
+    nPaths = 100000; // Main
+    
+    nSteps_y = 4;
+    seed2 = 412;
+    seed1 = 346092;
+    
+    clock_t begin_timeBswap2 = clock();
+    //vector<double> exTimes20 = {0.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0};
+    vector<double> exTimes20_push = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0 };
+    vector<double> ex_small = {0.0, 9.0};
+    for(auto &x : exTimes20_push ){
+        double bermudan2 = LMM_BermudaSwaption(vol20, corrA, F20, ex_small, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, 4);
+        auto timeBSwap2 =  float( clock () - begin_timeBswap2 )/ CLOCKS_PER_SEC;
+        print(bermudan2, ",", timeBSwap2);
+        
+        ex_small.push_back(x);
+    }
+    
+    
+    //double bermudan2 = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, 4);
+    //auto timeBSwap2 =  float( clock () - begin_timeBswap2 )/ CLOCKS_PER_SEC;
+    
+    //print("Bermuda price is ", bermudan2, ", time ", timeBSwap2, " seconds");
+    
     
     return 0;
 }

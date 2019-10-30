@@ -9,7 +9,7 @@
 #ifndef utilities_h
 #define utilities_h
 #include <string>
-
+static bool debug_var = false;
 using namespace std;
 
 // Prints the values of a vector in one row
@@ -19,6 +19,13 @@ print(vector<T> input_vec) {
         cout << x << " ";
     }
     cout << endl;
+}
+// Prints the values of a vector in one row
+template<class T> void
+print_DEBUG(vector<T> input_vec) {
+    if(debug_var){
+        print(input_vec);
+    }
 }
 
 // Prints values of a vector of vectors, in one row per vector
@@ -41,6 +48,14 @@ void print(ArgTypes... args)
 {
     expand_type{ 0, (std::cout << args, 0)... };
     std::cout << endl;
+}
+template<typename... ArgTypes>
+void print_DEBUG(ArgTypes... args)
+{
+    if(debug_var){
+        expand_type{ 0, (std::cout << args, 0)... };
+        std::cout << endl;
+    }
 }
 
 // Overload log for vector of T's
