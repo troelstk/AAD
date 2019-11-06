@@ -187,24 +187,20 @@ int main(int argc, const char * argv[]) {
     print("Black implied vol of simulation is ", BlackImpVol/sqrt(Ta) );
     
     nPaths_presim = 1000;
-    nPaths = 100000; // Main
+    nPaths = 10000; // Main
     
     nSteps_y = 4;
-    seed2 = 412;
-    seed1 = 346092;
+    seed2 = 41232;
+    seed1 = 3462;
     
     clock_t begin_timeBswap2 = clock();
-    //vector<double> exTimes20 = {0.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0};
-    vector<double> exTimes20_push = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0 };
-    vector<double> ex_small = {0.0, 9.0};
-    for(auto &x : exTimes20_push ){
-        double bermudan2 = LMM_BermudaSwaption(vol20, corrA, F20, ex_small, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, 4);
-        auto timeBSwap2 =  float( clock () - begin_timeBswap2 )/ CLOCKS_PER_SEC;
-        print(bermudan2, ",", timeBSwap2);
-        
-        ex_small.push_back(x);
-    }
-    
+    vector<double> exTimes20 = {0.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0};
+    //vector<double> exTimes20_push = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0 };
+    //vector<double> ex_small = {0.0, 9.0};
+    double bermudan2 = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, 4);
+    auto timeBSwap2 =  float( clock () - begin_timeBswap2 )/ CLOCKS_PER_SEC;
+    print(bermudan2, ",", timeBSwap2);
+
     
     //double bermudan2 = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, 4);
     //auto timeBSwap2 =  float( clock () - begin_timeBswap2 )/ CLOCKS_PER_SEC;
