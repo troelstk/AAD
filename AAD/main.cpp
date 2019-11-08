@@ -46,6 +46,7 @@ int main(int argc, const char * argv[]) {
     t = 0.0;
     Ta = 1.0; // Payment at time 2, 3 and 4
     Tb = 4.0;
+    int int_Ta = int(Ta), int_Tb = int(Tb), int_t = int(t);
     yearly_payments = 1.0;
     notional = 100.0;
     
@@ -53,7 +54,7 @@ int main(int argc, const char * argv[]) {
     vector<vector<double>> vol(M,  vector<double>(M));
     vector<vector<double>> corr(M, vector<double>(M));
     vector<double> F = {0.01, 0.02, 0.03, 0.04}; // F_1, F_2, F_3, F_4
-    double swap_rate = SR_from_F(F, yearly_payments, int(Ta), int(Tb));
+    double swap_rate = SR_from_F(F, yearly_payments, int_Ta, int_Tb);
     print( "Swap rate is ", swap_rate );
     r_fix = swap_rate;
     //vector<double> r_fix_vec = {0.05, 0.01, 0.02, swap_rate, 0.035, 0.04, 0.045};
@@ -90,12 +91,12 @@ int main(int argc, const char * argv[]) {
     double rebonato = sqrt(vol_TFM(F, yearly_payments, Ta, corr, vol, swap_rate, Ta) );
     print("Rebonato vol is ", rebonato);
     
-    double Cab = C_ab( F, yearly_payments, int(Ta), int(Tb));
+    double Cab = C_ab( F, yearly_payments, int_Ta, int_Tb);
     //print("Cab is ", Cab);
     // Black(T K, T F0, T vol)
     double black = Cab * BlackCall( r_fix, swap_rate, rebonato);
     
-    double disc = DF_from_F(F[0], 1.0);
+    double disc = DF_from_F(F[0], Ta);
     
     print("Black price ", disc * black * notional);
     
@@ -125,7 +126,9 @@ int main(int argc, const char * argv[]) {
     t = 0.0;
     Ta = 9;
     Tb = 20;
-    dim_n = 4;
+    int_Ta = int(Ta); int_Tb = int(Tb); int_t = int(t);
+    
+    dim_n = 2;
     yearly_payments = 1.0;
     notional = 100.0;
     vector<double> F20 = {0.0469, 0.0501, 0.0560, 0.0584, 0.0600, 0.0613, 0.0628, 0.0627, 0.0629, 0.0623,
@@ -137,7 +140,7 @@ int main(int argc, const char * argv[]) {
     vector<vector<double>> corrA(M, vector<double>(M));
     vector<vector<double>> corrB(M, vector<double>(M));
 
-    double swap_rate20 = SR_from_F(F20, yearly_payments, int(Ta), int(Tb)); // 9'th entry is F10,
+    double swap_rate20 = SR_from_F(F20, yearly_payments, int_Ta, int_Tb); // 9'th entry is F10,
     print( "Swap rate is ", swap_rate20 );
     r_fix = swap_rate20;
     
@@ -162,10 +165,11 @@ int main(int argc, const char * argv[]) {
     double rebonato2 = sqrt(vol_TFM(F20, yearly_payments, Ta, corrA, vol20, swap_rate20, int(Ta) + 1) );
     print("Rebonato vol is ", rebonato2/sqrt(Ta));
     
-    double C = C_ab( F20, yearly_payments, int(Ta), int(Tb));
+    double C = C_ab( F20, yearly_payments, int_Ta, int_Tb);
     print("C is ", C);
     // Black(T K, T F0, T vol)
-    double disc2 = DF_from_F(F20, yearly_payments, t, Ta);
+    
+    double disc2 = DF_from_F(F20, yearly_payments, int_t, int_Ta);
     
     double black20 = BlackCall( swap_rate20, swap_rate20, rebonato2);
     print("Black price ", disc2 * C * notional * black20 );
@@ -186,18 +190,18 @@ int main(int argc, const char * argv[]) {
     double BlackImpVol = BlackiVol(swap_rate20, swap_rate20, lmm20 / (disc2 * C * notional) );
     print("Black implied vol of simulation is ", BlackImpVol/sqrt(Ta) );
     
-    nPaths_presim = 1000;
+    nPaths_presim = 2000;
     nPaths = 10000; // Main
     
-    nSteps_y = 4;
+    nSteps_y = 1;
     seed2 = 41232;
-    seed1 = 3462;
+    seed1 = 3;
     
     clock_t begin_timeBswap2 = clock();
     vector<double> exTimes20 = {0.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0};
     //vector<double> exTimes20_push = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0 };
     //vector<double> ex_small = {0.0, 9.0};
-    double bermudan2 = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, 4);
+    double bermudan2 = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
     auto timeBSwap2 =  float( clock () - begin_timeBswap2 )/ CLOCKS_PER_SEC;
     print(bermudan2, ",", timeBSwap2);
 

@@ -30,7 +30,7 @@ print_DEBUG(vector<T> input_vec) {
 
 // Prints values of a vector of vectors, in one row per vector
 template<class T> void
-print(vector<vector<T>> input_vec_of_vec) {
+print(vector<vector<T>> & input_vec_of_vec) {
     for( auto &x : input_vec_of_vec) {
         print(x);
     }
@@ -60,7 +60,7 @@ void print_DEBUG(ArgTypes... args)
 
 // Overload log for vector of T's
 template<class T>
-vector<T> log(vector<T> input_vec) {
+vector<T> log(vector<T> & input_vec) {
     vector<T> res;
     for( auto &x : input_vec) {
         res.push_back( log(x) );
