@@ -13,25 +13,24 @@ static bool debug_var = false;
 using namespace std;
 
 // Prints the values of a vector in one row
-template<class T> void
-print(vector<T> input_vec) {
+inline void print(vector<double> input_vec) {
     for( auto &x : input_vec) {
         cout << x << " ";
     }
     cout << endl;
 }
 // Prints the values of a vector in one row
-template<class T> void
-print_DEBUG(vector<T> input_vec) {
+inline void
+print_DEBUG(vector<double> input_vec) {
     if(debug_var){
         print(input_vec);
     }
 }
 
 // Prints values of a vector of vectors, in one row per vector
-template<class T> void
-print(vector<vector<T>> & input_vec_of_vec) {
-    for( auto &x : input_vec_of_vec) {
+inline void
+print(vector<vector<double>> & input_vec_of_vecs) {
+    for( auto &x : input_vec_of_vecs) {
         print(x);
     }
     cout << endl;

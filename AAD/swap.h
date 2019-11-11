@@ -38,12 +38,12 @@ template<class T> T yield_from_df(T disc, T yearly_payments, T t1, T t2){
     return yearly_payments * (1.0/pow(disc, 1.0/(yearly_payments * (t2 - t1))) - 1.0 );
 }
 
-template<class T> T DF_from_F(T & forward, T  yearly_payments){
+template<class T> T DF_from_F(T & forward, double yearly_payments){
     // Also known as FP_j(t) in Brigo
     return 1.0/(1.0 + 1.0/yearly_payments * forward);
 }
 
-template<class T> T DF_from_F(vector<T> & forwards, T yearly_payments, int entry1, int entry2){ //, T Ta, T Tb){
+template<class T> T DF_from_F(vector<T> & forwards, double yearly_payments, int entry1, int entry2){ //, T Ta, T Tb){
     // Computes discount factor from Ta to Tb, given forward rates from Ta to Tb
     T prod(1.0);
        
@@ -55,7 +55,7 @@ template<class T> T DF_from_F(vector<T> & forwards, T yearly_payments, int entry
     return prod;
 }
 
-template<class T> T C_ab(vector<T> & forwards, T yearly_payments, int Ta, int Tb){
+template<class T> T C_ab(vector<T> & forwards, double yearly_payments, int Ta, int Tb){
     // Computes discount factor from Ta to Tb, given forward rates from Ta to Tb
     T sum(0.0);
     for(int i = Ta+1; i<=Tb; ++i ) {
@@ -66,7 +66,7 @@ template<class T> T C_ab(vector<T> & forwards, T yearly_payments, int Ta, int Tb
     return sum;
 }
 
-template<class T> T w(vector<T> & forwards, T yearly_payments, T inp_i, int start_idx){
+template<class T> T w(vector<T> & forwards, double yearly_payments, T inp_i, int start_idx){
     T sum(0.0);
     
     T top_prod(1.0);
@@ -86,7 +86,7 @@ template<class T> T w(vector<T> & forwards, T yearly_payments, T inp_i, int star
     return top_prod/sum;
 }
 
-template<class T> T vol_TFM(vector<T> & forwards, T yearly_payments, T Ta,
+template<class T> T vol_TFM(vector<T> & forwards, double yearly_payments, T Ta,
                             vector<vector<T>> & corr, vector<vector<T>> & vol, T swap_rate, int start_idx){
     // Rebonatos formula, 6.67 in Brigo. Works for time independent vol only, as specification in Table 3
     T res(0.0);
@@ -144,7 +144,7 @@ template<class T> T BlackiVol(T K, T F0, T price)
 
 
 
-template<class T> T SR_from_F(vector<T> & forwards, T & yearly_payments, int & entry_first, int & entry_last){
+template<class T> T SR_from_F(vector<T> & forwards, double yearly_payments, int entry_first, int entry_last){
     // Compute swap rate from forward rates. Eq. 6.33 in Brigo.
     T prod(1.0);
     T prod2(1.0);

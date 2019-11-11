@@ -140,34 +140,6 @@ public:
     
     // Operator overloads
     
-    // Multiplication: Two numbers
-    /*inline friend number operator*(const number& left, const number& right)
-    {
-        // Compute result eagerly and put on tape
-        number res(left.Node(), right.Node(), left.value()*right.value());
-        
-        // Compute derivatives
-        res.lDer() = right.value();
-        res.rDer() = left.value();
-        
-        return res;
-    }
-    // Multiplication: number and double
-    inline friend number operator*(const number& left, const double& right)
-    {
-        // Compute result eagerly and put on tape
-        number res(left.Node(), left.value()*right);
-        
-        // Compute derivatives
-        res.derivative() = right;
-        
-        return res;
-    }
-    // Multiplication: Double and number
-    inline friend number operator*(const double& left, const number& right)
-    {
-        return right*left; // Uses above overload
-    }*/
     
     /* The following operator overloads are strict IP of Antoine Savine */
     
@@ -488,6 +460,16 @@ public:
         number result(arg.Node(), e);
         //  Eagerly compute derivatives
         result.derivative() = 0.5 / e;
+        
+        return result;
+    }
+    inline friend number cos(const number& arg)
+    {
+        const double e = cos(arg.value());
+        //  Eagerly evaluate and put on tape
+        number result(arg.Node(), e);
+        //  Eagerly compute derivatives
+        result.derivative() = sin(e);
         
         return result;
     }

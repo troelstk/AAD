@@ -16,8 +16,6 @@
 #include <vector>
 #include <ctime>
 
-
-
 #include "AAD.h"
 #include "Heston.h"
 #include "lsm.h"
@@ -25,6 +23,7 @@
 #include "swap.h"
 #include "LMM.h"
 #include "utilities.h"
+#include "Bermuda.h"
 
 using namespace std;
 
@@ -138,7 +137,6 @@ int main(int argc, const char * argv[]) {
     M = 20;
     vector<vector<double>> vol20(M, vector<double>(M));
     vector<vector<double>> corrA(M, vector<double>(M));
-    vector<vector<double>> corrB(M, vector<double>(M));
 
     double swap_rate20 = SR_from_F(F20, yearly_payments, int_Ta, int_Tb); // 9'th entry is F10,
     print( "Swap rate is ", swap_rate20 );
@@ -155,7 +153,6 @@ int main(int argc, const char * argv[]) {
     // Fill Vol and corr
     for(int i = 0; i<M; i++){
         for(int j = 0; j<M; j++){
-            //corrB[i][j] = 1.0;
             vol20[i][j] = (i == j) & (i>0) & (j>0) ? Phi[i] : -10000.0;
             corrA[i][j] = (i>0) & (j>0) ? cos( Theta[i-1] - Theta[j-1]) : -10000;
         }
@@ -190,8 +187,8 @@ int main(int argc, const char * argv[]) {
     double BlackImpVol = BlackiVol(swap_rate20, swap_rate20, lmm20 / (disc2 * C * notional) );
     print("Black implied vol of simulation is ", BlackImpVol/sqrt(Ta) );
     
-    nPaths_presim = 2000;
-    nPaths = 10000; // Main
+    nPaths_presim = 1000;
+    nPaths = 1000; // Main
     
     nSteps_y = 1;
     seed2 = 41232;
@@ -201,17 +198,42 @@ int main(int argc, const char * argv[]) {
     vector<double> exTimes20 = {0.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0};
     //vector<double> exTimes20_push = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0 };
     //vector<double> ex_small = {0.0, 9.0};
+
     double bermudan2 = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
     auto timeBSwap2 =  float( clock () - begin_timeBswap2 )/ CLOCKS_PER_SEC;
     print(bermudan2, ",", timeBSwap2);
+    
+    print("\nAAD test:");
+    
+    vector<number> exTimesRisk, F_Risk, thetaRisk, PhiRisk;
+    
+    //for(auto & x : exTimes20) {exTimesRisk.push_back(number(x));}
+    for(auto & x : F20) {F_Risk.push_back(number(x));}
+    for(auto & x : Theta) {thetaRisk.push_back(number(x));}
+    for(auto & x : Phi) {PhiRisk.push_back(number(x));}
+    
+    vector<vector<number>> corrRisk(M, vector<number>(M));
+    vector<vector<number>> volRisk(M, vector<number>(M));
+    
+    // Fill Vol and corr
+    for(int i = 0; i<M; i++){
+        for(int j = 0; j<M; j++){
+            volRisk[i][j] =  PhiRisk[i];
+            corrRisk[i][j] = (i>0) & (j>0) ? cos( thetaRisk[i-1] - thetaRisk[j-1]) : number(-10000);
+        }
+    }
+    
+    number swap_rateRisk = number(SR_from_F(F, yearly_payments, int_Ta, int_Tb));
+    double yearly = 1.0;
+    
+    number bermudanAAD;
+    bermudanAAD = LMM_BermudaSwaptionAAD(volRisk, corrRisk, F_Risk, exTimes20, t, Ta, Tb, swap_rateRisk, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly, dim_n);
+    number::tape->rewind();
+    for(auto & x : volRisk[1]){
+        print("Vol risk is ", x.adjoint()/double(nPaths)) ;
+    }
+    
 
-    
-    //double bermudan2 = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, 4);
-    //auto timeBSwap2 =  float( clock () - begin_timeBswap2 )/ CLOCKS_PER_SEC;
-    
-    //print("Bermuda price is ", bermudan2, ", time ", timeBSwap2, " seconds");
-    
-    
     return 0;
 }
 
