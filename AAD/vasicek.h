@@ -134,10 +134,9 @@ template<class T> T vasicek_swaption_aad(vector<T> params, T t, T Ta, T Tb, T r_
         payoff.propagateToMark();
         
         res += payoff;
-        
     }
     // Discount result back from time Ta to time t
-    res = P(r_sim, t, Ta, params) * res / nPaths;
+    res = P(r_sim, t, Ta, params) * res / double(nPaths);
     number::propagateMarkToStart();
 
     return res;

@@ -9,6 +9,7 @@
 #ifndef utilities_h
 #define utilities_h
 #include <string>
+#include "number.h"
 static bool debug_var = false;
 using namespace std;
 
@@ -19,9 +20,22 @@ inline void print(vector<double> input_vec) {
     }
     cout << endl;
 }
+template<class number> inline void print(vector<number> input_vec) {
+    for( auto &x : input_vec) {
+        cout << x.value() << " ";
+    }
+    cout << endl;
+}
 // Prints the values of a vector in one row
 inline void
 print_DEBUG(vector<double> input_vec) {
+    if(debug_var){
+        print(input_vec);
+    }
+}
+// Prints the values of a vector in one row
+template<class number> inline void
+print_DEBUG(vector<number> input_vec) {
     if(debug_var){
         print(input_vec);
     }
