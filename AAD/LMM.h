@@ -168,7 +168,7 @@ template<class T> T LMM_swaptionAAD(vector<vector<T>> & vol, vector<vector<T>> &
     //myRNG.init(dim_n);
     vector<T> lnF(initF.size());
     //vector<double> gauss(dim_n);
-    //vector<T> lnRates(nPaths);
+
     // Discounting back to time t:
     T disc;
     int int_t = int(t);
@@ -202,8 +202,6 @@ template<class T> T LMM_swaptionAAD(vector<vector<T>> & vol, vector<vector<T>> &
         T floating_swap_rate;
         floating_swap_rate = SR_from_F(F, yearly_payments, int_Ta, int_Tb );
 
-        //lnRates[i] = log(floating_swap_rate);
-        
         T payoff( disc * notional * C_ab( F, yearly_payments, int_Ta, int_Tb) * max(floating_swap_rate - r_fix, 0.0) );
         
         payoff.propagateToMark();
@@ -215,7 +213,6 @@ template<class T> T LMM_swaptionAAD(vector<vector<T>> & vol, vector<vector<T>> &
     
     number::propagateMarkToStart();
     print("adj after last ", r_fix.adjoint());
-    //final_res.propagateMarkToStart();
     
     return final_res;
 }

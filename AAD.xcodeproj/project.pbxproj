@@ -25,6 +25,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		9F00ABE52382BF0100693166 /* BermudaAAD.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BermudaAAD.h; sourceTree = "<group>"; };
 		9F0B0E422337AC03009C35DD /* LMM.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LMM.h; sourceTree = "<group>"; };
 		9F0B0E432338AE1E009C35DD /* utilities.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = utilities.h; sourceTree = "<group>"; };
 		9F3E1A782375A06D0093A379 /* Bermuda.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Bermuda.h; sourceTree = "<group>"; };
@@ -102,8 +103,9 @@
 				9FF6D2AC232A71B100B4CAED /* lsm.h */,
 				9FF6D2AE232BC9B700B4CAED /* vasicek.h */,
 				9FD1777D232F694800D6C6A2 /* swap.h */,
-				9F3E1A782375A06D0093A379 /* Bermuda.h */,
 				9F0B0E422337AC03009C35DD /* LMM.h */,
+				9F3E1A782375A06D0093A379 /* Bermuda.h */,
+				9F00ABE52382BF0100693166 /* BermudaAAD.h */,
 				9FF22907231D562E00EF06F1 /* main.cpp */,
 			);
 			path = AAD;
