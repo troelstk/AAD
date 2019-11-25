@@ -245,17 +245,13 @@ template<class T> T LMM_BermudaSwaption(vector<vector<T>> & vol, vector<vector<T
         for(int i = 0; i<nPaths; ++i){
             payoff_main[i] /=  (1.0 + Libor2[i][t]);
         }
-
-        mat X(nPaths, no_basis_funcs, fill::zeros);
-
-        for(int i = 0; i<nPaths; ++i){
-            X.row(i) = vec( { 1.0, SR2[i][t], Libor2[i][t] }).t();
-        }
-        vec EY = X*beta.col(t);
     
         for(int i = 0; i<nPaths; ++i){
-            double exercise = swap_vals2[i][t] > EY[i] ? 1.0 : 0.0;
+            double EY2 = as_scalar( vec( { 1.0, SR2[i][t], Libor2[i][t] }).t() * beta.col(t) ) ;
+            bool exercise = swap_vals2[i][t] > EY2 ? 1.0 : 0.0;
+            //bool Continue = EY2 > swap_vals2[i][t] ? 1.0 : 0.0;
             payoff_main[i] = exercise * swap_vals2[i][t] + (1 - exercise) * payoff_main[i];
+            //payoff_main[i] = (1.0 - Continue) * swap_vals2[i][t] + Continue * payoff_main[i];
         }
     } // Exercise times
     print_DEBUG("Main backward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");

@@ -207,12 +207,10 @@ template<class T> T LMM_swaptionAAD(vector<vector<T>> & vol, vector<vector<T>> &
         payoff.propagateToMark();
         res += payoff;
     }
-    print("adj before last ", r_fix.adjoint());
     
     T final_res( res/double(nPaths) );
     
     number::propagateMarkToStart();
-    print("adj after last ", r_fix.adjoint());
     
     return final_res;
 }

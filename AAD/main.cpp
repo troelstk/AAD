@@ -35,9 +35,8 @@ int main(int argc, const char * argv[]) {
     //test_heston();
     //test_vasicek();
     double t , notional, Ta, Tb, yearly_payments,  r_fix;
-    int seed1, nSteps, nPaths, M, dim_n, seed2;
-    
-    
+    int seed1, nSteps, nPaths, nPaths_presim, M, dim_n, seed2, nSteps_y;
+
     seed1 = 59;
     dim_n = 2;
     nSteps = 4;
@@ -47,6 +46,7 @@ int main(int argc, const char * argv[]) {
     Ta = 1.0; // Payment at time 2, 3 and 4
     Tb = 4.0;
     int int_Ta = int(Ta), int_Tb = int(Tb), int_t = int(t);
+    /*
     yearly_payments = 1.0;
     notional = 100.0;
     
@@ -102,17 +102,11 @@ int main(int argc, const char * argv[]) {
     
     vector<double> exTimes = {0.0, 1.0, 2.0, 3.0};  // , 2.0, 3.0
     
-    int nPaths_presim = 1000;
-    nPaths = 100000;
-    int nSteps_y = 4;
     
-    clock_t begin_timeBswap = clock();
     
-    //double bermudan = LMM_BermudaSwaption(vol, corr, F, exTimes, t, Ta, Tb, r_fix, notional, seed1, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
-    //auto timeBSwap =  float( clock () - begin_timeBswap )/ CLOCKS_PER_SEC;
+    clock_t begin_timeBswap = clock();*/
     
-    //print("Bermuda price is ", bermudan, ", time ", timeBSwap, " seconds");
-    
+   
 
     
     
@@ -160,7 +154,7 @@ int main(int argc, const char * argv[]) {
     }
     //print(corrA);
 
-    double rebonato2 = sqrt(vol_TFM(F20, yearly_payments, Ta, corrA, vol20, swap_rate20, int(Ta) + 1) );
+    /*double rebonato2 = sqrt(vol_TFM(F20, yearly_payments, Ta, corrA, vol20, swap_rate20, int(Ta) + 1) );
     print("Rebonato vol is ", rebonato2/sqrt(Ta));
     
     double C = C_ab( F20, yearly_payments, int_Ta, int_Tb);
@@ -187,31 +181,31 @@ int main(int argc, const char * argv[]) {
     print("Calculation time: ", time2, " seconds");
     
     double BlackImpVol = BlackiVol(swap_rate20, swap_rate20, lmm20 / (disc2 * C * notional) );
-    print("Black implied vol of simulation is ", BlackImpVol/sqrt(Ta) );
+    print("Black implied vol of simulation is ", BlackImpVol/sqrt(Ta) );*/
     
     
     print("\nBermuda test: ");
-    nPaths_presim = 1000;
-    nPaths = 1000; // Main
+    nPaths_presim = 2000;
+    nPaths = 2000; // Main
     
     nSteps_y = 4;
-    seed2 = 41232;
-    seed1 = 3;
+    seed2 = 432;
+    seed1 = 309;
     
     clock_t begin_timeBswap2 = clock();
-    vector<double> exTimes20 = {0.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0};
-    //vector<double> exTimesEur = {0.0, 9.0};
-    int vol_idx = 15;
+    vector<double> exTimes20   = {0.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0};
+    vector<double> exTimesTest = {0.0, 9.0, 10.0, 11.0, 12.0};
+    int vol_idx = 18;
     //print("vol ", vol20[vol_idx][vol_idx] );
     
-    double eps = 0.000001;
-    double bermudan2 = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
+    double eps = 0.00000001;
+    double bermudan2 = LMM_BermudaSwaption(vol20, corrA, F20, exTimesTest, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
     print("Bermudan price ", bermudan2);
     vol20[vol_idx][vol_idx] += eps;
     //print("vol ", vol20[vol_idx][vol_idx] );
-    double bermudan3 = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
+    double bermudan3 = LMM_BermudaSwaption(vol20, corrA, F20, exTimesTest, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
     vol20[vol_idx][vol_idx] -= eps;
-    double bermudan4 = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix+eps, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
+    double bermudan4 = LMM_BermudaSwaption(vol20, corrA, F20, exTimesTest, t, Ta, Tb, r_fix+eps, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
     
     auto timeBSwap3 =  float( clock () - begin_timeBswap2 )/ CLOCKS_PER_SEC / 3.0;
 
@@ -226,12 +220,12 @@ int main(int argc, const char * argv[]) {
     vector<number> F_Risk, thetaRisk, PhiRisk;
     
     //for(auto & x : exTimes20) {exTimesRisk.push_back(number(x));}
-    for(auto & x : F20) {F_Risk.push_back(number(x));}
+    for(auto & x : F20)   {F_Risk.push_back(number(x));}
     for(auto & x : Theta) {thetaRisk.push_back(number(x));}
-    for(auto & x : Phi) {PhiRisk.push_back(number(x));}
+    for(auto & x : Phi)   {PhiRisk.push_back(number(x));}
     
     vector<vector<number>> corrRisk(M, vector<number>(M));
-    vector<vector<number>> volRisk(M, vector<number>(M));
+    vector<vector<number>> volRisk(M,  vector<number>(M));
     
     // Fill Vol and corr
     for(int i = 1; i<M; i++){
@@ -241,13 +235,11 @@ int main(int argc, const char * argv[]) {
         }
     }
     
-    number fixedRateRisk(r_fix);
-    double yearly = 1.0;
+    number fixedRateRisk(r_fix);    
     
     
-    /*
-    print("\nAAD test European:");
-    nPaths = 1000;
+    /*print("\nAAD test European:");
+    nPaths = 10000;
     clock_t eurAADstart = clock();
     number EUR_AAD = LMM_swaptionAAD(volRisk, corrRisk, F_Risk,
                                      t, Ta, Tb, fixedRateRisk, notional,
@@ -287,8 +279,9 @@ int main(int argc, const char * argv[]) {
     
     print("\nAAD test Bermuda:");
     clock_t bermAADstart = clock();
+
     number bermudanAAD;
-    bermudanAAD = LMM_BermudaSwaptionAAD(volRisk, corrRisk, F_Risk, exTimes20, t, Ta, Tb, fixedRateRisk, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly, dim_n);
+    bermudanAAD = LMM_BermudaSwaptionAAD(volRisk, corrRisk, F_Risk, exTimesTest, t, Ta, Tb, fixedRateRisk, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
     auto timeAADBermuda = float( clock() - bermAADstart )/ float( CLOCKS_PER_SEC);
     print("Bermudan value AAD: ", bermudanAAD.value(), " in ", timeAADBermuda, " seconds");
     
@@ -298,8 +291,8 @@ int main(int argc, const char * argv[]) {
     print("Vol adjoint is ", vol_AAD);
     print("Fixed rate adjoint is ", FR_AAD);
     
-    print("Vol ratio ", vol_FD / vol_AAD);
-    print("Fixed rate ratio ", FR_FD / FR_AAD);
+    print("Vol ratio ", vol_AAD / vol_FD);
+    print("Fixed rate ratio ", FR_AAD / FR_FD);
     
     print("\nAAD: ", float(timeAADBermuda) / float(timeBSwap3), " times slower");
     
