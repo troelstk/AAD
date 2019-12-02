@@ -45,9 +45,9 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
     vec eigval;
     eig_sym(eigval, P, corr2);
     // H has diagonal with eigenvalues
-    mat H = diagmat(eigval);
+    //mat H = diagmat(eigval);
     vec largest_n_eigvals = eigval.tail_rows(dim_n);
-    // H2 is H but only largest n eigenvalues
+    // H_n is diagonal with only largest n eigenvalues
     mat H_n = diagmat(largest_n_eigvals);
     // Lambda_n = sqrt(H_n)
     mat L_n = sqrt(H_n);
@@ -114,8 +114,11 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
                 double floating_swap_rate;
                 
                 floating_swap_rate = SR_from_F(Fdouble, yearly_payments, int_ExTime, int_Tb );
+                
+                
+                
                 swap_val = disc.value() * notional *
-                    C_ab( Fdouble, yearly_payments, int_ExTime, int_Tb) *
+                    C_ab( Fdouble, yearly_payments, int_ExTime, int_ExTime, int_Tb) *
                     max(floating_swap_rate - r_fix.value(), 0.0);
                 SR[i][t] = floating_swap_rate;
                 Libor[i][t] = Fdouble[ int_ExTime ];
@@ -176,8 +179,6 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
     } // Scope
     print_DEBUG("Presim backward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");
     begin_time = clock();
-    //print(beta);
-
     
     arma_rng::set_seed(seed2);
     // Main-simulation
@@ -189,14 +190,19 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
     T dt( 1.0/double(nSteps_y) );
     T sqDt = sqrt(dt);
 
-    number::tape->mark();
     // Main-simulation
-    for(int t = 1; t<exTimes.size(); ++t ){
-        //print("exTime is ", exTimes[t], " t is ", t);
-        int int_ExTime = (int)(exTimes[t]);
-        int nSteps = nSteps_y * double(exTimes[t] - exTimes[t-1]);
-        for(int i = 0; i<nPaths; ++i){
-            number::tape->rewindToMark();
+    T end_result(0.0);
+
+    number::tape->mark();
+    for(int i = 0; i<nPaths; ++i){
+        number::tape->rewindToMark();
+        double eta = 1;
+        T swap_path(0.0);
+        for(int t = 1; t<exTimes.size(); ++t ){
+            //print("exTime is ", exTimes[t], " t is ", t);
+            int int_ExTime = (int)(exTimes[t]);
+            int nSteps = nSteps_y * double(exTimes[t] - exTimes[t-1]);
+            
             T swap_val(0.0);
             mat gauss_n = B_n * arma::mvnrnd(zeros(dim_n), eye(dim_n,dim_n), nSteps);
             //print(size(gauss_n));
@@ -217,72 +223,66 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
             F = exp(lnF);
             T floating_swap_rate;
             floating_swap_rate = SR_from_F(F, yearly_payments, int_ExTime, int_Tb );
-            // Compute value of swap
+            
+            //printf("disc decimals: %20.10f \n", disc.value());
             swap_val = disc * notional *
-                C_ab( F, yearly_payments, int_ExTime, int_Tb) *
+                C_ab( F, yearly_payments, int_ExTime, int_ExTime, int_Tb) *
                 max(floating_swap_rate - r_fix, 0.0);
+
             SR2[i][t] = floating_swap_rate;
             Libor2[i][t] = F[ int_ExTime ];
-            
-            //double EY2 = t < exTimes.size() - 1 ?
-            //    as_scalar(vec( { 1.0, SR2[i][t].value(), Libor2[i][t].value() }).t() * beta.col(t)) : 0;
-            
-            swap_val.propagateToMark();
             swap_vals2[i][t] = swap_val;
+            
+            //print( "eta is ",  eta, " swap val is ",  swap_val.value() );
+            swap_path += eta * (swap_val );
+            //cout << eta  << " ";
+            
+            double EY2 = t < exTimes.size() - 1 ? // continuation value except if at last exercise time, then 0.
+                as_scalar(vec( { 1.0, SR2[i][t].value(), Libor2[i][t].value() }).t() * beta.col(t)) : 0.0;
+            eta *= EY2 > swap_val ? 1.0 : 0.0; // 1 if continue, 0 if exercise
             //print_DEBUG("Set libor to ", Libor2[i][t], " SR ", SR2[i][t], " swap val ",  swap_val, " at time ", t);
-        } // paths-loop
-        //print_DEBUG("Adj is ", vol[idx][idx].adjoint());
-    } // Exercise dates-loop
+        } // exTimes
+        //print("swap path val ", swap_path.value());
+        swap_path.propagateToMark();
+        end_result += swap_path;
+        
+    } // paths
     print_DEBUG("Main forward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");
     begin_time = clock();
+    number::propagateMarkToStart();
+    print("End result is ", end_result.value()/double(nPaths));
+    
     //print_DEBUG("Adj is ", vol[idx][idx].adjoint());
-    //number::propagateMarkToStart();
-    
-    //vector<double> continues(nPaths);
-    //std::fill(continues.begin(), continues.end(), 1.0);
-    
     
     // Exercise value at last exercise time (exercise if ITM)
     vector<T> payoff_main(nPaths);
     for(int i = 0; i<nPaths; ++i){
         payoff_main[i] = swap_vals2[i][exTimes.size() - 1];
     }
-    double exercises = 0.0;
-    //number::tape->mark();
     // Backwards loop, from second last exercise time and back :
     for(int t = int(exTimes.size() - 2); t >= 1; --t ){
         
         for(int i = 0; i<nPaths; ++i){
-            //number::tape->rewindToMark();
-            payoff_main[i] /=  (1.0 + Libor2[i][t]);
+            //payoff_main[i] /=  (1.0 + Libor2[i][t]);
             double EY2 = as_scalar(vec( { 1.0, SR2[i][t].value(), Libor2[i][t].value() }).t() * beta.col(t));
             double exercise = swap_vals2[i][t] > EY2 ? 1.0 : 0.0;
-            exercises += exercise;
             T payoff;
             payoff = exercise * swap_vals2[i][t] + (1 - exercise) * payoff_main[i];
             //payoff_main[i] = exercise * swap_vals2[i][t] + (1 - exercise) * payoff_main[i];
-            //payoff.propagateToMark();
             payoff_main[i] = payoff;
         }
         //print("Adj is ", vol[idx][idx].adjoint());
-        //print("There were ", exercises, " exercises");
     } // Exercise times
-    
-    
+
     
     T sumPayoff( sum(payoff_main) );
-    //sumPayoff.propagateToMark();
-    
-    //print("disc is ", disc, " from time ", int(t), " to time ", int(exTimes[1]) );
-    T res( sumPayoff/double(nPaths) );
 
-    //number::propagateMarkToStart();
-    //res.propagateToStart();
     
-    print("disc is ", disc.value());
+    //T res( sumPayoff/double(nPaths) );
+
     print_DEBUG("Main backward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");
     
-    return res;
+    return end_result/double(nPaths) ;
 }
 
 #endif /* BermudaAAD_h */

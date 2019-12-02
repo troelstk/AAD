@@ -91,7 +91,7 @@ int main(int argc, const char * argv[]) {
     double rebonato = sqrt(vol_TFM(F, yearly_payments, Ta, corr, vol, swap_rate, Ta) );
     print("Rebonato vol is ", rebonato);
     
-    double Cab = C_ab( F, yearly_payments, int_Ta, int_Tb);
+    double Cab = C_ab( F, yearly_payments, int_t, int_Ta, int_Tb);
     //print("Cab is ", Cab);
     // Black(T K, T F0, T vol)
     double black = Cab * BlackCall( r_fix, swap_rate, rebonato);
@@ -154,19 +154,13 @@ int main(int argc, const char * argv[]) {
     }
     //print(corrA);
 
-    /*double rebonato2 = sqrt(vol_TFM(F20, yearly_payments, Ta, corrA, vol20, swap_rate20, int(Ta) + 1) );
+    double rebonato2 = sqrt(vol_TFM(F20, yearly_payments, Ta, corrA, vol20, swap_rate20, int(Ta) + 1) );
     print("Rebonato vol is ", rebonato2/sqrt(Ta));
-    
-    double C = C_ab( F20, yearly_payments, int_Ta, int_Tb);
-    print("C is ", C);
-    // Black(T K, T F0, T vol)
-    
-    double disc2 = DF_from_F(F20, yearly_payments, int_t, int_Ta);
-    
+    double C = C_ab( F20, yearly_payments, int_t, int_Ta, int_Tb);
     double black20 = BlackCall( swap_rate20, swap_rate20, rebonato2);
-    print("Black price ", disc2 * C * notional * black20 );
-    double BlackImpVol3 = BlackiVol(swap_rate20, swap_rate20, black20 );
-    print("Black20 implied vol is ", BlackImpVol3/sqrt(Ta) );
+    print("Black price ", C * notional * black20 );
+    //double BlackImpVol3 = BlackiVol(swap_rate20, swap_rate20, black20 );
+    //print("Black20 implied vol is ", BlackImpVol3/sqrt(Ta) );
     
     
     nSteps = 36;
@@ -180,25 +174,25 @@ int main(int argc, const char * argv[]) {
     print("LMM EUR Swaption price is ", lmm20);
     print("Calculation time: ", time2, " seconds");
     
-    double BlackImpVol = BlackiVol(swap_rate20, swap_rate20, lmm20 / (disc2 * C * notional) );
-    print("Black implied vol of simulation is ", BlackImpVol/sqrt(Ta) );*/
+    double BlackImpVol = BlackiVol(swap_rate20, swap_rate20, lmm20 / ( C * notional) );
+    print("Black implied vol of simulation is ", BlackImpVol/sqrt(Ta) );
     
     
     print("\nBermuda test: ");
     nPaths_presim = 2000;
-    nPaths = 2000; // Main
+    nPaths = 5000; // Main
     
     nSteps_y = 4;
-    seed2 = 432;
-    seed1 = 309;
+    seed2 = 234;
+    seed1 = 9;
     
     clock_t begin_timeBswap2 = clock();
     vector<double> exTimes20   = {0.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0};
     vector<double> exTimesTest = {0.0, 9.0, 10.0, 11.0, 12.0};
-    int vol_idx = 18;
+    int vol_idx = 14;
     //print("vol ", vol20[vol_idx][vol_idx] );
     
-    double eps = 0.00000001;
+    double eps = 0.000000001;
     double bermudan2 = LMM_BermudaSwaption(vol20, corrA, F20, exTimesTest, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
     print("Bermudan price ", bermudan2);
     vol20[vol_idx][vol_idx] += eps;

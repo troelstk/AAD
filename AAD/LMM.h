@@ -27,7 +27,7 @@ template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & co
     T tau(1.0/yearly_payments );
     T sqDt = sqrt(dt);
     T res(0.0);
-    int int_Ta = (int)(Ta), int_Tb = (int)(Tb);
+    int int_t = (int)(t), int_Ta = (int)(Ta), int_Tb = (int)(Tb);
     size_t M1 = initF.size();
     
     vec means(M1, fill::zeros);
@@ -101,7 +101,7 @@ template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & co
 
         lnRates[i] = log(floating_swap_rate);
 
-        res += C_ab( F, yearly_payments, int_Ta, int_Tb) * max(floating_swap_rate - r_fix, 0.0);
+        res += C_ab( F, yearly_payments, int_Ta, int_Ta, int_Tb) * max(floating_swap_rate - r_fix, 0.0);
     }
     //print("std is ", stdev(lnRates));
     //print("kurtosis is ", kurtosis(lnRates));
@@ -109,7 +109,6 @@ template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & co
     
     // Discounting back to time t:
     T disc;
-    int int_t = int(t);
     disc = DF_from_F(initF, yearly_payments, int_t, int_Ta);
     return disc * res/double(nPaths) * notional;
 }
@@ -202,7 +201,7 @@ template<class T> T LMM_swaptionAAD(vector<vector<T>> & vol, vector<vector<T>> &
         T floating_swap_rate;
         floating_swap_rate = SR_from_F(F, yearly_payments, int_Ta, int_Tb );
 
-        T payoff( disc * notional * C_ab( F, yearly_payments, int_Ta, int_Tb) * max(floating_swap_rate - r_fix, 0.0) );
+        T payoff( disc * notional * C_ab( F, yearly_payments, int_Ta, int_Ta, int_Tb) * max(floating_swap_rate - r_fix, 0.0) );
         
         payoff.propagateToMark();
         res += payoff;

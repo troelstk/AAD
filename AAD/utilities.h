@@ -10,7 +10,7 @@
 #define utilities_h
 #include <string>
 #include "number.h"
-static bool debug_var = true;
+static bool debug_var = false;
 using namespace std;
 
 // Prints the values of a vector in one row
