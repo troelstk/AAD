@@ -180,33 +180,16 @@ int main(int argc, const char * argv[]) {
     
     print("\nBermuda test: ");
     nPaths_presim = 2000;
-    nPaths = 5000; // Main
+    nPaths = 2000; // Main
     
     nSteps_y = 4;
-    seed2 = 234;
-    seed1 = 9;
+    seed2 = 24;
+    seed1 = 29;
     
-    clock_t begin_timeBswap2 = clock();
+    
     vector<double> exTimes20   = {0.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0};
-    vector<double> exTimesTest = {0.0, 9.0, 10.0, 11.0, 12.0};
-    int vol_idx = 14;
-    //print("vol ", vol20[vol_idx][vol_idx] );
+    //vector<double> exTimesTest = {0.0, 9.0, 10.0, 11.0, 12.0};
     
-    double eps = 0.000000001;
-    double bermudan2 = LMM_BermudaSwaption(vol20, corrA, F20, exTimesTest, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
-    print("Bermudan price ", bermudan2);
-    vol20[vol_idx][vol_idx] += eps;
-    //print("vol ", vol20[vol_idx][vol_idx] );
-    double bermudan3 = LMM_BermudaSwaption(vol20, corrA, F20, exTimesTest, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
-    vol20[vol_idx][vol_idx] -= eps;
-    double bermudan4 = LMM_BermudaSwaption(vol20, corrA, F20, exTimesTest, t, Ta, Tb, r_fix+eps, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
-    
-    auto timeBSwap3 =  float( clock () - begin_timeBswap2 )/ CLOCKS_PER_SEC / 3.0;
-
-    double vol_FD = (bermudan3 - bermudan2)/eps;
-    double FR_FD = (bermudan4 - bermudan2)/eps;
-    print("Vol FD: ", vol_FD);
-    print("Fixed rate FD: ", FR_FD, ", time is ", timeBSwap3);
     
     
     print("\nAAD test:");
@@ -223,12 +206,30 @@ int main(int argc, const char * argv[]) {
     
     // Fill Vol and corr
     for(int i = 1; i<M; i++){
-        for(int j = 1; j<M; j++){
-            volRisk[i][j] =  PhiRisk[i];
+        for(int j = 1; j<i+1; j++){
             corrRisk[i][j] = cos( thetaRisk[i-1] - thetaRisk[j-1]);
+            //print("row ", i, " col ", j, " ", corrRisk[i][j].value());
+        }
+    }
+    //print("other side");
+    for(int i = 1; i<M; i++){
+        for(int j = 1; j<i; j++){
+            corrRisk[j][i] = corrRisk[i][j];
+            //print("row ", j, " col ", i, " ", corrRisk[i][j].value());
         }
     }
     
+    /*for(int i = 1; i<M; i++){
+        for(int j = 1; j<M; j++){
+            cout << corrRisk[i][j].value() << ",";
+        }
+        cout << "\n";
+    }*/
+    
+    
+    for(int i = 1; i<M; i++){
+        volRisk[i][i] =  PhiRisk[i];
+    }
     number fixedRateRisk(r_fix);    
     
     
@@ -275,20 +276,76 @@ int main(int argc, const char * argv[]) {
     clock_t bermAADstart = clock();
 
     number bermudanAAD;
-    bermudanAAD = LMM_BermudaSwaptionAAD(volRisk, corrRisk, F_Risk, exTimesTest, t, Ta, Tb, fixedRateRisk, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
+    bermudanAAD = LMM_BermudaSwaptionAAD(volRisk, corrRisk, F_Risk, exTimes20, t, Ta, Tb, fixedRateRisk, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
     auto timeAADBermuda = float( clock() - bermAADstart )/ float( CLOCKS_PER_SEC);
     print("Bermudan value AAD: ", bermudanAAD.value(), " in ", timeAADBermuda, " seconds");
     
     //for(auto & x : volRisk[1]){print("Vol risk is ", x.adjoint()/double(nPaths)) ;}
     double FR_AAD = fixedRateRisk.adjoint()/double(nPaths);
-    double vol_AAD = volRisk[vol_idx][vol_idx].adjoint()/double(nPaths);
-    print("Vol adjoint is ", vol_AAD);
-    print("Fixed rate adjoint is ", FR_AAD);
     
-    print("Vol ratio ", vol_AAD / vol_FD);
-    print("Fixed rate ratio ", FR_AAD / FR_FD);
+    
+    
+    // Compute unbumped value:
+    clock_t begin_timeBswap2 = clock();
+    double bermudan_unbumped = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
+    print("Bermudan price ", bermudan_unbumped);
+    auto timeBSwap3 =  float( clock() - begin_timeBswap2 )/ CLOCKS_PER_SEC;
+    
     
     print("\nAAD: ", float(timeAADBermuda) / float(timeBSwap3), " times slower");
+    
+    double eps = 0.0000001;
+    
+    /*for(int idx=1; idx<Tb; ++idx) {
+        // Bump one at the time and compute FD approx:
+        F20[idx] += eps;
+        double bermudan_bumped = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
+        F20[idx] -= eps;
+        double FD_approx = (bermudan_bumped - bermudan_unbumped)/eps;
+        
+        double AAD_approx = F_Risk[idx].adjoint()/double(nPaths);
+        printf("%11.10f,%11.10f\n", AAD_approx, FD_approx );
+    }*/
+    
+    for(int i=9; i<Tb; ++i) {
+        for(int j=9; j<i+1; ++j) {
+        // Bump one at the time and compute FD approx:
+            corrA[i][j] += eps;
+            corrA[j][i] += eps;
+            double bermudan_bumped = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
+            corrA[i][j] -= eps;
+            corrA[j][i] -= eps;
+            double FD_approx = (bermudan_bumped - bermudan_unbumped)/eps;
+            
+            double AAD_approx = corrRisk[i][j].adjoint()/double(nPaths);
+            cout << i << "," << j << "," ;
+            printf("%11.10f,%11.10f,%11.10f", AAD_approx, FD_approx, AAD_approx/FD_approx);
+        }
+        cout << "\n";
+    }
+    
+    for(int i = 1; i<M; i++){
+        for(int j = 1; j<i+1; j++){
+            print(corrRisk[i][j].adjoint()/double(nPaths));
+        }
+    }
+    
+    /* Test number of paths needed in pre sim:
+     vector<int> nPath_vec = {100, 200, 400, 800, 1000, 1500, 2000, 3000, 4000, 5000, 10000, 20000};
+    
+    for(auto & x : nPath_vec){
+        clock_t time1 = clock();
+        double bermudan_paths = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, 70000, x, nSteps_y, yearly_payments, dim_n);
+        printf("%11.10f,%11.10f\n", bermudan_paths, float( clock () - time1 )/ CLOCKS_PER_SEC );
+    }*/
+    
+    /* Test number of paths needed in main sim:
+     vector<int> nPath_vec = {30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000};
+    for(auto & x : nPath_vec){
+        clock_t time1 = clock();
+        double bermudan_paths = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, x, 3000, nSteps_y, yearly_payments, dim_n);
+        printf("%11.10f,%11.10f\n", bermudan_paths, float( clock () - time1 )/ CLOCKS_PER_SEC );
+    }*/
     
     return 0;
 }
