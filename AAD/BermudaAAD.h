@@ -14,7 +14,7 @@
 #include "gaussians.h"
 #include "mrg32k3a.h"
 #include "/usr/local/Cellar/armadillo/9.700.2/include/armadillo"
-
+#include "Cholesky.h"
 
 template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vector<T>> & corr,
                              vector<T> & initF, vector<double> & exTimes,
@@ -29,15 +29,49 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
     
     size_t M1 = initF.size();
     
-    vec means(M1, fill::zeros);
+    double eps = 0.01;
+
     mat C(M1, M1, fill::zeros);
-    
+    mat Cov(M1, M1, fill::zeros);
+    print("Cov is ");
     // Fill covariance matrix
     for(int i = 0; i<M1; ++i){
         for(int j = 0; j<M1; ++j){
             C(i,j) = double(corr[i][j]);
+            double entry = double(corr[i][j]) * double(vol[i][i]) * double(vol[j][j]);
+            Cov(i,j) = i == j ? entry + eps : entry ;
+            //cout << C(i,j) << ",";
         }
+        //cout << "\n";
     }
+    
+    vector<vector<T>> cov_s(int_Tb-int_Ta, vector<T>(int_Tb-int_Ta));
+    vector<vector<T>> lower(int_Tb-int_Ta, vector<T>(int_Tb-int_Ta));
+    
+    // test: Fill covariance vec of vecs
+    for(int i = int_Ta; i<Tb; ++i){
+        for(int j = int_Ta; j<Tb; ++j){
+            T cov_ij(corr[i][j] * double(vol[i][i]) * double(vol[j][j]));
+            cov_s[i-int_Ta][j-int_Ta] = (i == j) ? cov_ij + eps : cov_ij ;
+            
+            //cout << cov_s[i-int_Ta][j-int_Ta].value() << ",";
+            //cout << i << " " << j << "\n";
+        }
+        //cout <<"\n" ;
+    }
+    
+    lower = myChol(cov_s);
+    
+    
+    mat Cov_small = Cov( span(int_Ta,M1-1), span(int_Ta,M1-1) );
+    print(Cov_small);
+    
+    print(Cov_small.is_symmetric(1e-5));
+    print(Cov_small.is_sympd(1e-5));
+    
+    print(arma::chol(Cov_small));
+    
+    //print(size(corr2));
     mat corr2 = C( span(int_Ta,M1-1), span(int_Ta,M1-1) );
     // Find eigenvalues and vectors of correlation matrix
     mat P;
@@ -64,7 +98,7 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
             corr_vol[k][j] = corr[k][j] * vol[j][j];
         }
     }
-    
+    mrg32k3a myRNG(seed1, seed2);
     vector<double> Fdouble;
 
     clock_t begin_time = clock();
@@ -83,15 +117,21 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
         vector<vector<double>> swap_vals(nPaths_presim, vector<double>(exTimes.size()));
         
         // Simulate swap rates, pre-simulation
-        for(int t = 1; t<exTimes.size(); ++t ){
-            //print("exTime is ", exTimes[t], " t is ", t);
-            double swap_val(0.0);
-            int int_ExTime = (int)(exTimes[t]);
-            int nSteps = nSteps_y * double(exTimes[t] - exTimes[t-1]);
-            double dt( 1.0 /double(nSteps_y));
-            double sqDt = sqrt(dt);
+        double dt( 1.0 /double(nSteps_y));
+        double sqDt = sqrt(dt);
 
-            for(int i = 0; i<nPaths_presim; ++i){
+        for(int i = 0; i<nPaths_presim; ++i) {
+            for(int t = 1; t<exTimes.size(); ++t ) {
+                //print("exTime is ", exTimes[t], " t is ", t);
+                double swap_val(0.0);
+                int int_ExTime = (int)(exTimes[t]);
+                int nSteps = nSteps_y * double(exTimes[t] - exTimes[t-1]);
+                
+                /*myRNG.init(nSteps);
+                vector<double> gauss(nSteps);
+                
+                myRNG.nextG(gauss);*/
+                
                 mat gauss_n = B_n * arma::mvnrnd(zeros(dim_n), eye(dim_n,dim_n), nSteps);
                 vector<double> lnF = log(initFdouble);
                 
@@ -105,14 +145,13 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
                             sum += corr_vol[k][j].value() * Fj / (1.0 + tau.value() * Fj);
                         }
                         lnF[k] += vol[k][k].value()*tau.value()*sum*dt - vol[k][k].value()*vol[k][k].value()/2.0*dt + sqDt*vol[k][k].value()*gauss_n(k-Ta,n);
+                        //lnF[k] += vol[k][k].value()*tau.value()*sum*dt - vol[k][k].value()*vol[k][k].value()/2.0*dt + sqDt*vol[k][k].value()*gauss[n];;
                         //print_DEBUG("F", k+1, " simulated to ", exp(lnF[k]) );
                     } // rates
                 } // steps
                 // Now have F_k(T_alpha) for k=10,..,M
                 Fdouble = exp(lnF);
-                double floating_swap_rate;
-                
-                floating_swap_rate = SR_from_F(Fdouble, yearly_payments, int_ExTime, int_Tb );
+                double floating_swap_rate = SR_from_F(Fdouble, yearly_payments, int_ExTime, int_Tb );
                 
                 swap_val = disc.value() * notional *
                     C_ab( Fdouble, yearly_payments, int_ExTime, int_ExTime, int_Tb) *
@@ -120,8 +159,9 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
                 SR[i][t] = floating_swap_rate;
                 Libor[i][t] = Fdouble[ int_ExTime ];
                 swap_vals[i][t] = swap_val;
-            } // paths-loop
-        } // Exercise dates-loop
+                
+            } // exTimes
+        } // paths
         print_DEBUG("Presim forward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");
         begin_time = clock();
         
@@ -186,6 +226,7 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
 
     // Main-simulation
     T end_result(0.0);
+    
 
     number::tape->mark();
     for(int i = 0; i<nPaths; ++i){
@@ -197,8 +238,14 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
             int int_ExTime = (int)(exTimes[t]);
             int nSteps = nSteps_y * double(exTimes[t] - exTimes[t-1]);
             
+            /*myRNG.init(nSteps);
+            vector<double> gauss(nSteps);
+            
+            myRNG.nextG(gauss);*/
             T swap_val(0.0);
             mat gauss_n = B_n * arma::mvnrnd(zeros(dim_n), eye(dim_n,dim_n), nSteps);
+            
+            //mat gauss_M = arma::mvnrnd(zeros(int_Tb-int_Ta), corr2, nSteps);
             vector<T> lnF = log(initF);
             for(int n = 0; n<nSteps; ++n) {
                 for(int k = int_ExTime; k < int_Tb; ++k)
@@ -208,7 +255,9 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
                         T Fj(exp(lnF[j]));
                         sum += corr_vol[k][j] * Fj / (1.0 + tau * Fj);
                     }
+                    //lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*vol[k][k]*gauss[n];
                     lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*vol[k][k]*gauss_n(k-Ta,n);
+                    //lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*vol[k][k]*gauss_M(k-Ta,n);
                 } // rates
             } // steps
             // Now have F_k(T_alpha) for k=10,..,M
@@ -220,10 +269,10 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
                 C_ab( F, yearly_payments, int_ExTime, int_ExTime, int_Tb) *
                 max(floating_swap_rate - r_fix, 0.0);
 
-            swap_path += eta * (swap_val );
+            swap_path += eta * swap_val;
             
             double EY2 = t < exTimes.size() - 1 ?
-                // continuation value - at last ex time the eta value computed below will never be used
+                // continuation value - at last ex time the eta value computed below will never be used (so 0.0 could be anything)
                 as_scalar(vec( { 1.0, floating_swap_rate.value(), F[ int_ExTime ].value() }).t() * beta.col(t)) : 0.0;
             eta *= EY2 > swap_val ? 1.0 : 0.0; // 1 if continue, 0 if exercise
         }
@@ -231,7 +280,6 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
         end_result += swap_path;
     }
     print_DEBUG("Main forward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");
-    begin_time = clock();
     number::propagateMarkToStart();
 
     return end_result/double(nPaths) ;

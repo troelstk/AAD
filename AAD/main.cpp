@@ -128,7 +128,6 @@ int main(int argc, const char * argv[]) {
     vector<double> F20 = {0.0469, 0.0501, 0.0560, 0.0584, 0.0600, 0.0613, 0.0628, 0.0627, 0.0629, 0.0623,
                           0.0630, 0.0636, 0.0643, 0.0648, 0.0653, 0.0640, 0.0630, 0.0618, 0.0607, 0.0594 };
     
-    // Test 1.b, formulation 7 with a=0, b=0, c=1, d=0, all correlations set to 1
     M = 20;
     vector<vector<double>> vol20(M, vector<double>(M));
     vector<vector<double>> corrA(M, vector<double>(M));
@@ -150,9 +149,9 @@ int main(int argc, const char * argv[]) {
         for(int j = 1; j<M; j++){
             vol20[i][i] = Phi[i] ;
             corrA[i][j] = cos( Theta[i-1] - Theta[j-1]) ;
+            //corrA[i][j] = 1.0;
         }
     }
-    //print(corrA);
 
     double rebonato2 = sqrt(vol_TFM(F20, yearly_payments, Ta, corrA, vol20, swap_rate20, int(Ta) + 1) );
     print("Rebonato vol is ", rebonato2/sqrt(Ta));
@@ -179,8 +178,8 @@ int main(int argc, const char * argv[]) {
     
     
     print("\nBermuda test: ");
-    nPaths_presim = 2000;
-    nPaths = 2000; // Main
+    nPaths_presim = 1000;
+    nPaths = 1000; // Main
     
     nSteps_y = 4;
     seed2 = 24;
@@ -188,7 +187,7 @@ int main(int argc, const char * argv[]) {
     
     
     vector<double> exTimes20   = {0.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0};
-    //vector<double> exTimesTest = {0.0, 9.0, 10.0, 11.0, 12.0};
+    //vector<double> exTimes20 = {0.0, 9.0, 10.0, 11.0, 12.0};
     
     
     
@@ -208,6 +207,7 @@ int main(int argc, const char * argv[]) {
     for(int i = 1; i<M; i++){
         for(int j = 1; j<i+1; j++){
             corrRisk[i][j] = cos( thetaRisk[i-1] - thetaRisk[j-1]);
+            //corrRisk[i][j] = 1.0;
             //print("row ", i, " col ", j, " ", corrRisk[i][j].value());
         }
     }
@@ -218,14 +218,6 @@ int main(int argc, const char * argv[]) {
             //print("row ", j, " col ", i, " ", corrRisk[i][j].value());
         }
     }
-    
-    /*for(int i = 1; i<M; i++){
-        for(int j = 1; j<M; j++){
-            cout << corrRisk[i][j].value() << ",";
-        }
-        cout << "\n";
-    }*/
-    
     
     for(int i = 1; i<M; i++){
         volRisk[i][i] =  PhiRisk[i];
@@ -288,13 +280,12 @@ int main(int argc, const char * argv[]) {
     // Compute unbumped value:
     clock_t begin_timeBswap2 = clock();
     double bermudan_unbumped = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
-    print("Bermudan price ", bermudan_unbumped);
     auto timeBSwap3 =  float( clock() - begin_timeBswap2 )/ CLOCKS_PER_SEC;
+    print("Bermudan value non-AAD: ", bermudan_unbumped, " in ", timeBSwap3, " seconds");
     
+    print("AAD: ", float(timeAADBermuda) / float(timeBSwap3), " times slower");
     
-    print("\nAAD: ", float(timeAADBermuda) / float(timeBSwap3), " times slower");
-    
-    double eps = 0.0000001;
+    double eps = 10e-8;
     
     /*for(int idx=1; idx<Tb; ++idx) {
         // Bump one at the time and compute FD approx:
@@ -307,28 +298,46 @@ int main(int argc, const char * argv[]) {
         printf("%11.10f,%11.10f\n", AAD_approx, FD_approx );
     }*/
     
-    for(int i=9; i<Tb; ++i) {
-        for(int j=9; j<i+1; ++j) {
+    /* Compare correlations with bump-and-revalue */
+    for(int i=9; i<10; ++i) { // i<Tb
+        for(int j=9; j<10; ++j) { // j<i+1
         // Bump one at the time and compute FD approx:
             corrA[i][j] += eps;
-            corrA[j][i] += eps;
+            if( i != j) {
+                corrA[j][i] += eps;
+            }
             double bermudan_bumped = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
             corrA[i][j] -= eps;
-            corrA[j][i] -= eps;
+            if( i != j) {
+                corrA[j][i] -= eps;
+            }
             double FD_approx = (bermudan_bumped - bermudan_unbumped)/eps;
             
             double AAD_approx = corrRisk[i][j].adjoint()/double(nPaths);
-            cout << i << "," << j << "," ;
-            printf("%11.10f,%11.10f,%11.10f", AAD_approx, FD_approx, AAD_approx/FD_approx);
+            //cout << i << "," << j << "," ;
+            printf("%11.10f,%11.10f,%11.10f\n", AAD_approx, FD_approx, AAD_approx/FD_approx);
+            //cout << AAD_approx/FD_approx << "," ;
         }
+        
         cout << "\n";
     }
     
+    /* Compare theta adjoints with FD
     for(int i = 1; i<M; i++){
-        for(int j = 1; j<i+1; j++){
-            print(corrRisk[i][j].adjoint()/double(nPaths));
+        double AAD_approx = thetaRisk[i-1].adjoint()/double(nPaths);
+        
+        Theta[i-1] += eps;
+        for(int i = 1; i<M; i++){
+            for(int j = 1; j<M; j++){
+                corrA[i][j] = cos( Theta[i-1] - Theta[j-1]) ;
+            }
         }
-    }
+        double bermudan_bumped = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
+        Theta[i-1] -= eps;
+        
+        double FD_approx = (bermudan_bumped - bermudan_unbumped)/eps;
+        printf("%11.10f,%11.10f,%11.10f\n", AAD_approx, FD_approx, AAD_approx/FD_approx);
+    }*/
     
     /* Test number of paths needed in pre sim:
      vector<int> nPath_vec = {100, 200, 400, 800, 1000, 1500, 2000, 3000, 4000, 5000, 10000, 20000};

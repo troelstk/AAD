@@ -375,6 +375,21 @@ public:
         return result;
     }
     
+    inline friend vector<vector<number>> chol( const vector<vector<number>>& A)
+    {
+        size_t M = A[0].size();
+        //  Eagerly evaluate and put on tape
+        vector<vector<number>> result(M,vector<number>(M));
+        //  Eagerly compute derivatives
+        //result[0][0].derivative() = 1;
+        
+        
+        return result;
+    }
+    
+    
+    // Operators
+    
     number& operator+=(const number& arg)
     {
         *this = *this + arg;

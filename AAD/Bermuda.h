@@ -103,9 +103,11 @@ template<class T> T LMM_BermudaSwaption(vector<vector<T>> & vol, vector<vector<T
             for(int i = 0; i<nPaths_presim; ++i){
                 
                 mat gauss_n = B_n * arma::mvnrnd(zeros(dim_n), eye(dim_n,dim_n), nSteps);
+
                 vector<T> lnF = log(initF);
                 for(int n = 0; n<nSteps; ++n) {
                     //print_DEBUG("Time is ", exTimes[t-1] + dt*(n+1));
+                    //double N = invNormalCdf(double(rand() + 1.0) / double(RAND_MAX + 2.0));
                     for(int k = int_ExTime; k < int_Tb; ++k)
                     {
                         T sum(0.0);
@@ -114,6 +116,7 @@ template<class T> T LMM_BermudaSwaption(vector<vector<T>> & vol, vector<vector<T
                             sum += corr_vol[k][j] * Fj / (1.0 + tau * Fj);
                         }
                         lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*vol[k][k]*gauss_n(k-Ta,n);
+                        //lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt * vol[k][k] * N;
                         //print_DEBUG("F", k+1, " simulated to ", exp(lnF[k]) );
                     } // rates
                 } // steps
@@ -204,14 +207,16 @@ template<class T> T LMM_BermudaSwaption(vector<vector<T>> & vol, vector<vector<T
             //print(size(gauss_n));
             vector<T> lnF = log(initF);
             for(int n = 0; n<nSteps; ++n) {
+                //double N = invNormalCdf(double(rand() + 1.0) / double(RAND_MAX + 2.0));
                 for(int k = int_ExTime; k < int_Tb; ++k)
                 {
                     T sum(0.0);
                     for(int j = int(exTimes[t]); j <= k; ++j ) {
                         double Fj = exp(lnF[j]);
-                        //sum += corr[k][j] * vol[j][j] * Fj / (1.0 + tau * Fj);
                         sum += corr_vol[k][j] * Fj / (1.0 + tau * Fj);
                     }
+                    
+                    //lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*vol[k][k]*N;
                     lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*vol[k][k]*gauss_n(k-Ta,n);
                     //print("F", k+1, " simulated to ", exp(lnF[k]) );
                 } // rates

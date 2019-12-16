@@ -35,6 +35,7 @@
 		9FD1777D232F694800D6C6A2 /* swap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = swap.h; sourceTree = "<group>"; };
 		9FDB0C31232278CF00B048BB /* Heston.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Heston.h; sourceTree = "<group>"; };
 		9FDC5C4D2354BEA6006E42D1 /* div.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = div.h; sourceTree = "<group>"; };
+		9FE0AFE123A78A1700113EE2 /* Cholesky.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Cholesky.h; sourceTree = "<group>"; };
 		9FF228FA231D55D400EF06F1 /* AAD */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AAD; sourceTree = BUILT_PRODUCTS_DIR; };
 		9FF22905231D562E00EF06F1 /* number.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = number.h; sourceTree = "<group>"; };
 		9FF22907231D562E00EF06F1 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -105,6 +106,7 @@
 				9FD1777D232F694800D6C6A2 /* swap.h */,
 				9F0B0E422337AC03009C35DD /* LMM.h */,
 				9F3E1A782375A06D0093A379 /* Bermuda.h */,
+				9FE0AFE123A78A1700113EE2 /* Cholesky.h */,
 				9F00ABE52382BF0100693166 /* BermudaAAD.h */,
 				9FF22907231D562E00EF06F1 /* main.cpp */,
 			);
