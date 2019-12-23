@@ -20,12 +20,7 @@ inline void print(vector<double> input_vec) {
     }
     cout << endl;
 }
-template<class number> inline void print(vector<number> input_vec) {
-    for( auto &x : input_vec) {
-        cout << x.value() << " ";
-    }
-    cout << endl;
-}
+
 // Prints the values of a vector in one row
 inline void
 print_DEBUG(vector<double> input_vec) {
@@ -72,7 +67,7 @@ void print_DEBUG(ArgTypes... args)
 }
 
 // Overload log for vector of T's
-template<class T>
+template<class T> inline
 vector<T> log(vector<T> & input_vec) {
     vector<T> res;
     for( auto &x : input_vec) {
@@ -134,7 +129,7 @@ T skew(vector<T>& input_vec) {
     return skew;
 }
 
-template<class T>
+template<class T> inline
 T kurtosis(vector<T>& input_vec) {
     T kurtosis(0.0);
     T Mean = mean(input_vec);

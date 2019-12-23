@@ -207,7 +207,7 @@ public:
 				gaussVec.begin());
 
 			//	Do not generate next
-			myAnti = true;
+			myAnti = false;
 		}
 	}
 

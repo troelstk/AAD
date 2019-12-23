@@ -11,44 +11,47 @@
 
 #include <cmath>
   
+/* */
 template<class T>
-vector<vector<T>> myChol( vector<vector<T>> A)
+vector<vector<T>> Chol( vector<vector<T>> A)
 {
     size_t n = A[1].size();
-    vector<vector<T>> L(n, vector<T>(n, number(0.0)));
+    vector<vector<T>> L(n, vector<T>(n, T(0.0)));
   
     // Decomposing a matrix into Lower Triangular
     for (int i = 0; i < n; i++) {
-        for (int j = 0; j <= i; j++) {
+        for (int j = 0; j < i; j++) {
             T sum(0.0);
-            if (j == i) // summation for diagnols
-            {
-                for (int k = 0; k < j; k++) {
-                    sum += pow(L[j][k], 2.0);
-                }
-                L[j][j] = sqrt(A[j][j] - sum);
-            } else {
-                // Evaluating L(i, j) using L(j, j)
-                for(int k = 0; k < j; k++){
-                    sum += (L[i][k] * L[j][k]);
-                }
-                L[i][j] = (A[i][j] - sum) / L[j][j];
+            // Evaluating L(i, j) using L(j, j)
+            for(int k = 0; k < j; k++){
+                sum += (L[i][k] * L[j][k]);
             }
+            L[i][j] = (A[i][j] - sum) / L[j][j];
         }
-    }
-    
-    // Displaying Lower Triangular and its Transpose
-    for (int i = 0; i < n; i++) {
-        // Lower Triangular
-        for (int j = 0; j < n; j++)
-        {
-            cout <<  L[i][j].value() << ",";
+        T sum(0.0);
+        for (int k = 0; k < i; k++) {
+            sum += pow(L[i][k], 2.0);
         }
-        cout << "\n";
+        L[i][i] = sqrt(A[i][i] - sum);
     }
     
     return L;
 }
 
+/* Matrix times column vector */
+template<class T>
+vector<T> simGauss( vector<vector<T>> & L, vector<double> & gauss)
+{
+    size_t n = gauss.size();
+    vector<T> res(n);
+    
+    for(int i = 0; i<n; i++){
+        res[i] = 0.0;
+        for(int j = 0; j<i+1; j++){
+            res[i] += L[i][j] * gauss[j];
+        }
+    }
+    return res;
+}
 
 #endif /* Cholesky_h */

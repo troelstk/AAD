@@ -29,50 +29,41 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
     
     size_t M1 = initF.size();
     
-    double eps = 0.01;
+    double eps = 10e-10; // Added to diagonal to make matrix positive definite
 
     mat C(M1, M1, fill::zeros);
     mat Cov(M1, M1, fill::zeros);
-    print("Cov is ");
+
     // Fill covariance matrix
     for(int i = 0; i<M1; ++i){
         for(int j = 0; j<M1; ++j){
             C(i,j) = double(corr[i][j]);
-            double entry = double(corr[i][j]) * double(vol[i][i]) * double(vol[j][j]);
-            Cov(i,j) = i == j ? entry + eps : entry ;
-            //cout << C(i,j) << ",";
         }
-        //cout << "\n";
     }
     
     vector<vector<T>> cov_s(int_Tb-int_Ta, vector<T>(int_Tb-int_Ta));
     vector<vector<T>> lower(int_Tb-int_Ta, vector<T>(int_Tb-int_Ta));
     
+    vector<vector<double>> cov_d(  int_Tb-int_Ta, vector<double>(int_Tb-int_Ta));
+    vector<vector<double>> lower_d(int_Tb-int_Ta, vector<double>(int_Tb-int_Ta));
+    
     // test: Fill covariance vec of vecs
     for(int i = int_Ta; i<Tb; ++i){
         for(int j = int_Ta; j<Tb; ++j){
-            T cov_ij(corr[i][j] * double(vol[i][i]) * double(vol[j][j]));
-            cov_s[i-int_Ta][j-int_Ta] = (i == j) ? cov_ij + eps : cov_ij ;
-            
-            //cout << cov_s[i-int_Ta][j-int_Ta].value() << ",";
-            //cout << i << " " << j << "\n";
+            T cov_ij(corr[i][j] * vol[i][i] * vol[j][j]);
+            cov_s[i-int_Ta][j-int_Ta] = cov_ij ;
+            cov_d[i-int_Ta][j-int_Ta] = cov_ij.value();
         }
-        //cout <<"\n" ;
+        cov_s[i-int_Ta][i-int_Ta] += eps;
+        cov_d[i-int_Ta][i-int_Ta] += eps;
     }
     
-    lower = myChol(cov_s);
-    
-    
-    mat Cov_small = Cov( span(int_Ta,M1-1), span(int_Ta,M1-1) );
-    print(Cov_small);
-    
-    print(Cov_small.is_symmetric(1e-5));
-    print(Cov_small.is_sympd(1e-5));
-    
-    print(arma::chol(Cov_small));
+    lower = Chol(cov_s);
+    lower_d = Chol(cov_d);
+    //print(lower_d);
     
     //print(size(corr2));
-    mat corr2 = C( span(int_Ta,M1-1), span(int_Ta,M1-1) );
+    /*mat corr2 = C( span(int_Ta,M1-1), span(int_Ta,M1-1) );
     // Find eigenvalues and vectors of correlation matrix
     mat P;
     vec eigval;
@@ -88,7 +79,7 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
     mat P_n = P.tail_cols(dim_n);
     
     // B_n is used to simulate from
-    mat B_n = P_n * L_n;
+    mat B_n = P_n * L_n;*/
     
     // Pre compute product, instead of doing it in inner most loop
     vector<vector<T>> corr_vol(M1, vector<T>(M1));
@@ -98,7 +89,7 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
             corr_vol[k][j] = corr[k][j] * vol[j][j];
         }
     }
-    mrg32k3a myRNG(seed1, seed2);
+    
     vector<double> Fdouble;
 
     clock_t begin_time = clock();
@@ -110,8 +101,12 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
     vector<double> initFdouble;
     for(auto & x : initF ) {initFdouble.push_back(x.value());}
     
-    { // Scope to destruct everything declared in pre-simulation and first backward loop
-        arma_rng::set_seed(seed1);
+    
+    
+    { // Scope to destruct everything declared in pre-simulation and backward loop
+        mrg32k3a myRNG(seed1, seed2);
+        myRNG.init(int_Tb-int_Ta);
+        vector<double> gauss(int_Tb-int_Ta);
         vector<vector<double>> SR(nPaths_presim, vector<double>(exTimes.size()));
         vector<vector<double>> Libor(nPaths_presim, vector<double>(exTimes.size()));
         vector<vector<double>> swap_vals(nPaths_presim, vector<double>(exTimes.size()));
@@ -126,16 +121,12 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
                 double swap_val(0.0);
                 int int_ExTime = (int)(exTimes[t]);
                 int nSteps = nSteps_y * double(exTimes[t] - exTimes[t-1]);
-                
-                /*myRNG.init(nSteps);
-                vector<double> gauss(nSteps);
-                
-                myRNG.nextG(gauss);*/
-                
-                mat gauss_n = B_n * arma::mvnrnd(zeros(dim_n), eye(dim_n,dim_n), nSteps);
                 vector<double> lnF = log(initFdouble);
                 
                 for(int n = 0; n<nSteps; ++n) {
+                    myRNG.nextG(gauss);
+                    vector<double> gauss_corr = simGauss( lower_d, gauss);
+
                     //print_DEBUG("Time is ", exTimes[t-1] + dt*(n+1));
                     for(int k = int_ExTime; k < int_Tb; ++k)
                     {
@@ -144,9 +135,7 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
                             double Fj = exp(lnF[j]);
                             sum += corr_vol[k][j].value() * Fj / (1.0 + tau.value() * Fj);
                         }
-                        lnF[k] += vol[k][k].value()*tau.value()*sum*dt - vol[k][k].value()*vol[k][k].value()/2.0*dt + sqDt*vol[k][k].value()*gauss_n(k-Ta,n);
-                        //lnF[k] += vol[k][k].value()*tau.value()*sum*dt - vol[k][k].value()*vol[k][k].value()/2.0*dt + sqDt*vol[k][k].value()*gauss[n];;
-                        //print_DEBUG("F", k+1, " simulated to ", exp(lnF[k]) );
+                        lnF[k] += vol[k][k].value()*tau.value()*sum*dt - vol[k][k].value()*vol[k][k].value()/2.0*dt + sqDt*gauss_corr[k-int_Ta];
                     } // rates
                 } // steps
                 // Now have F_k(T_alpha) for k=10,..,M
@@ -174,7 +163,8 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
         }
         
         // Backwards loop:
-        for(int t = int(exTimes.size() - 2); t >= 1; --t ){
+        for(int t = int(exTimes.size() - 2); t >= 1; --t )
+        {
             //print("exTime is ", exTimes[t], " t is ", t);
             vector<double> ITMswapRate, ITMLibor, ITMY;
             vector<int> indices;
@@ -210,8 +200,6 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
             }
             
             beta.col(t) = V * D.t() * Sig * U.t() * vec(ITMY) ;
-            //print("beta col ", t, " is ", beta.col(t));
-            
         } // Backward loop
     } // Scope
     print_DEBUG("Presim backward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");
@@ -227,7 +215,11 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
     // Main-simulation
     T end_result(0.0);
     
-
+    vector<double> swap_rates(nPaths);
+    mrg32k3a myRNG(seed2, seed1);
+    myRNG.init(int_Tb-int_Ta);
+    vector<double> gauss(int_Tb-int_Ta);
+    
     number::tape->mark();
     for(int i = 0; i<nPaths; ++i){
         number::tape->rewindToMark();
@@ -237,17 +229,11 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
             //print("exTime is ", exTimes[t], " t is ", t);
             int int_ExTime = (int)(exTimes[t]);
             int nSteps = nSteps_y * double(exTimes[t] - exTimes[t-1]);
-            
-            /*myRNG.init(nSteps);
-            vector<double> gauss(nSteps);
-            
-            myRNG.nextG(gauss);*/
             T swap_val(0.0);
-            mat gauss_n = B_n * arma::mvnrnd(zeros(dim_n), eye(dim_n,dim_n), nSteps);
-            
-            //mat gauss_M = arma::mvnrnd(zeros(int_Tb-int_Ta), corr2, nSteps);
             vector<T> lnF = log(initF);
             for(int n = 0; n<nSteps; ++n) {
+                myRNG.nextG(gauss);
+                vector<T> gauss_corr = simGauss( lower, gauss);
                 for(int k = int_ExTime; k < int_Tb; ++k)
                 {
                     T sum(0.0);
@@ -255,16 +241,14 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
                         T Fj(exp(lnF[j]));
                         sum += corr_vol[k][j] * Fj / (1.0 + tau * Fj);
                     }
-                    //lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*vol[k][k]*gauss[n];
-                    lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*vol[k][k]*gauss_n(k-Ta,n);
-                    //lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*vol[k][k]*gauss_M(k-Ta,n);
+                    lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*gauss_corr[k-int_Ta];
                 } // rates
             } // steps
             // Now have F_k(T_alpha) for k=10,..,M
             F = exp(lnF);
             T floating_swap_rate;
             floating_swap_rate = SR_from_F(F, yearly_payments, int_ExTime, int_Tb );
-            
+
             swap_val = disc * notional *
                 C_ab( F, yearly_payments, int_ExTime, int_ExTime, int_Tb) *
                 max(floating_swap_rate - r_fix, 0.0);
@@ -275,13 +259,16 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
                 // continuation value - at last ex time the eta value computed below will never be used (so 0.0 could be anything)
                 as_scalar(vec( { 1.0, floating_swap_rate.value(), F[ int_ExTime ].value() }).t() * beta.col(t)) : 0.0;
             eta *= EY2 > swap_val ? 1.0 : 0.0; // 1 if continue, 0 if exercise
+            //print("Swap value ",swap_val.value());
         }
+        //print("Swap path is ", swap_path.value());
         swap_path.propagateToMark();
+        //print(swap_path.value());
         end_result += swap_path;
     }
     print_DEBUG("Main forward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");
     number::propagateMarkToStart();
-
+    //print("kurtosis ", kurtosis(swap_rates));
     return end_result/double(nPaths) ;
 }
 
