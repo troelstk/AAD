@@ -23,10 +23,13 @@ class node {
     // Number of childs
     const size_t n;
     
+    // Adjoint of this node
     double mAdjoint = 0;
     
+    // Pointers to derivatives between child nodes and this node
     double* pDerivatives;
     
+    // Pointers to adjoints of child nodes 
     double** pAdjPtrs;
 
 public:
@@ -37,9 +40,10 @@ public:
         return mAdjoint;
     }
     
+    // Method to add to node w_j's childrens adjoints
     void propagateOne()
     {
-        // Return if zero childs or mAdjoint is 0
+        // Return if zero childs (nothing to propagate) or mAdjoint is 0 (no need to propagate as all terms added are just 0)
         if ( !n || !mAdjoint) return;
         
         for(size_t i = 0; i < n; ++i ) {

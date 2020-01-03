@@ -11,7 +11,7 @@
 
 #include <cmath>
   
-/* */
+/* Computes the lower triangular Cholesky decomposition of input matrix A */
 template<class T>
 vector<vector<T>> Chol( vector<vector<T>> A)
 {

@@ -28,26 +28,17 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
     double lambda = 0.0; // Tikhonov parameter
     
     size_t M1 = initF.size();
+    size_t M = int_Tb-int_Ta;
     
     double eps = 10e-10; // Added to diagonal to make matrix positive definite
-
-    mat C(M1, M1, fill::zeros);
-    mat Cov(M1, M1, fill::zeros);
-
-    // Fill covariance matrix
-    for(int i = 0; i<M1; ++i){
-        for(int j = 0; j<M1; ++j){
-            C(i,j) = double(corr[i][j]);
-        }
-    }
     
-    vector<vector<T>> cov_s(int_Tb-int_Ta, vector<T>(int_Tb-int_Ta));
-    vector<vector<T>> lower(int_Tb-int_Ta, vector<T>(int_Tb-int_Ta));
+    vector<vector<T>> cov_s(M, vector<T>(M));
+    vector<vector<T>> lower(M, vector<T>(M));
     
-    vector<vector<double>> cov_d(  int_Tb-int_Ta, vector<double>(int_Tb-int_Ta));
-    vector<vector<double>> lower_d(int_Tb-int_Ta, vector<double>(int_Tb-int_Ta));
+    vector<vector<double>> cov_d(  M, vector<double>(M));
+    vector<vector<double>> lower_d(M, vector<double>(M));
     
-    // test: Fill covariance vec of vecs
+    // Fill covariance vec of vecs
     for(int i = int_Ta; i<Tb; ++i){
         for(int j = int_Ta; j<Tb; ++j){
             T cov_ij(corr[i][j] * vol[i][i] * vol[j][j]);
@@ -60,7 +51,16 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
     
     lower = Chol(cov_s);
     lower_d = Chol(cov_d);
-    //print(lower_d);
+    
+    /*mat C(M1, M1, fill::zeros);
+    mat Cov(M1, M1, fill::zeros);
+
+    // Fill covariance matrix
+    for(int i = 0; i<M1; ++i){
+        for(int j = 0; j<M1; ++j){
+            C(i,j) = double(corr[i][j]);
+        }
+    }*/
     
     //print(size(corr2));
     /*mat corr2 = C( span(int_Ta,M1-1), span(int_Ta,M1-1) );
@@ -105,8 +105,8 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
     
     { // Scope to destruct everything declared in pre-simulation and backward loop
         mrg32k3a myRNG(seed1, seed2);
-        myRNG.init(int_Tb-int_Ta);
-        vector<double> gauss(int_Tb-int_Ta);
+        myRNG.init(M);
+        vector<double> gauss(M);
         vector<vector<double>> SR(nPaths_presim, vector<double>(exTimes.size()));
         vector<vector<double>> Libor(nPaths_presim, vector<double>(exTimes.size()));
         vector<vector<double>> swap_vals(nPaths_presim, vector<double>(exTimes.size()));
@@ -202,10 +202,10 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
             beta.col(t) = V * D.t() * Sig * U.t() * vec(ITMY) ;
         } // Backward loop
     } // Scope
+    
     print_DEBUG("Presim backward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");
     begin_time = clock();
     
-    arma_rng::set_seed(seed2);
     // Main-simulation
     vector<T> F;
 
@@ -217,8 +217,8 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
     
     vector<double> swap_rates(nPaths);
     mrg32k3a myRNG(seed2, seed1);
-    myRNG.init(int_Tb-int_Ta);
-    vector<double> gauss(int_Tb-int_Ta);
+    myRNG.init(M);
+    vector<double> gauss(M);
     
     number::tape->mark();
     for(int i = 0; i<nPaths; ++i){
@@ -268,7 +268,7 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
     }
     print_DEBUG("Main forward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");
     number::propagateMarkToStart();
-    //print("kurtosis ", kurtosis(swap_rates));
+
     return end_result/double(nPaths) ;
 }
 

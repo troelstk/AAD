@@ -182,9 +182,9 @@ int main(int argc, const char * argv[]) {
     nPaths = 10000; // Main
     
     nSteps_y = 4;
-    seed2 = 2004;
-    seed1 = 9;
-    
+    seed1 = 14;
+    seed2 = 1077;
+    print("Seed1: ", seed1, ", seed2: ", seed2, ", Main paths: ", nPaths);
     
     vector<double> exTimes20   = {0.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0};
     //vector<double> exTimes20 = {0.0, 9.0};
@@ -288,7 +288,7 @@ int main(int argc, const char * argv[]) {
     double eps = 10e-12;
     
     /* Compare forward rate adjoints with bump-and-revalue */
-    print("Compare forward rate adjoints with bump-and-revalue");
+    /*print("Compare forward rate adjoints with bump-and-revalue");
     for(int idx=0; idx<Tb; ++idx) {
         // Bump one at the time and compute FD approx:
         F20[idx] += eps;
@@ -301,9 +301,10 @@ int main(int argc, const char * argv[]) {
         printf("%1.2f %% & ", (AAD_approx-FD_approx )/ AAD_approx*100 );
         //printf("%11.10f,%11.10f\n", FD_approx, AAD_approx );
     }
-    cout << "\n";
+    cout << "\n";*/
+    
     /* Compare vol adjoints with bump-and-revalue */
-    print("Compare vol adjoints with bump-and-revalue");
+    /*print("Compare vol adjoints with bump-and-revalue");
     for(int idx=1; idx<Tb; ++idx) {
         // Bump one at the time and compute FD approx:
         vol20[idx][idx] += eps;
@@ -315,11 +316,11 @@ int main(int argc, const char * argv[]) {
         printf("%1.2f %% & ", (AAD_approx-FD_approx )/ AAD_approx*100 );
         //printf("%11.10f,%11.10f\n", FD_approx, AAD_approx );
     }
-    cout << "\n";
+    cout << "\n";*/
     
     /* Compare correlation adjoints with bump-and-revalue */
-    /*for(int i=1; i<Tb; ++i) { // i<Tb
-        for(int j=1; j<Tb; ++j) { // j<i+1
+    for(int i=9; i<10; ++i) { // i<Tb
+        for(int j=9; j<11; ++j) { // j<i+1
         // Bump one at the time and compute FD approx:
             corrA[i][j] += eps;
             if( i != j) {
@@ -334,32 +335,33 @@ int main(int argc, const char * argv[]) {
             
             double AAD_approx = corrRisk[i][j].adjoint()/double(nPaths);
             //printf("%2.1d, %2.1d: %11.10f,%11.10f,%11.10f\n", i, j, AAD_approx, FD_approx, AAD_approx/FD_approx);
-            cout << (AAD_approx-FD_approx)/AAD_approx << "," ;
+            printf("%1.2f %% & ", (AAD_approx-FD_approx )/ AAD_approx*100 );
         }
         cout << "\n";
-    }*/
+    }
+    
     /* Print all correlation adjoints */
-    /*for(int i=1; i<Tb; ++i) { // i<Tb
-        for(int j=1; j<Tb; ++j) { // j<i+1
+    for(int i=9; i<Tb; ++i) { // i<Tb
+        for(int j=9; j<Tb; ++j) { // j<i+1
             double AAD_approx = corrRisk[i][j].adjoint()/double(nPaths);
-            printf("%11.10f,", AAD_approx);
+            printf("%5.1f & ", AAD_approx);
         }
         cout << "\n";
-    }*/
+    }
     
     /* Print all F adjoints */
-    print("F adjoints");
+    /*print("F adjoints");
     for(int i=0; i<Tb; ++i) { // i<Tb
         double AAD_approx = F_Risk[i].adjoint()/double(nPaths);
         printf("%1.2f & ", AAD_approx);
     }
-    cout << "\n";
+    cout << "\n";*/
     /* Print all vol adjoints */
-    print("Vol adjoints");
+    /*print("Vol adjoints");
     for(int i=0; i<Tb; ++i) { // i<Tb
         double AAD_approx = PhiRisk[i].adjoint()/double(nPaths);
         printf("%1.2f & ", AAD_approx);
-    }
+    }*/
     
     
     

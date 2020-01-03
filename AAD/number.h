@@ -98,7 +98,6 @@ public:
     
     
     double& adjoint() {
-        //cout << "adjoint is " << myNode->getAdjoint() <<"\n";
         return myNode->adjoint();
     }
     
