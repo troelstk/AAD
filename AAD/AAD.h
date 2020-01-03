@@ -22,15 +22,4 @@ inline void putOnTape(IT begin, IT end)
     for_each(begin, end, [](number& n){n.putOnTape();});
 }
 
-// Convert a range of numbers/doubles to doubles/numbers
-/*template<class IT1, class IT2>
-inline void convertCollection(IT1 srcBegin, IT1 srcEnd, IT2 destBegin)
-{
-    using destType = remove_reference_t<decltype(*destBegin)>;
-    transform(srcBegin, srcEnd, destBegin,
-              [](const auto& source){return destType(source);});
-}*/
-
-
-
 #endif /* AAD_h */

@@ -43,7 +43,6 @@
 		9FF22909231D562E00EF06F1 /* node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = node.h; sourceTree = "<group>"; };
 		9FF2290C231D57E600EF06F1 /* tape.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = tape.h; path = /Users/Troels/Dropbox/Uni/Speciale/AAD/AAD/tape.h; sourceTree = "<absolute>"; };
 		9FF2290D231F916900EF06F1 /* AAD.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = AAD.cpp; path = /Users/Troels/Dropbox/Uni/Speciale/AAD/AAD/AAD.cpp; sourceTree = "<absolute>"; };
-		9FF6D2AB232A6D6300B4CAED /* armadillo.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = armadillo.hpp; sourceTree = "<group>"; };
 		9FF6D2AC232A71B100B4CAED /* lsm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lsm.h; sourceTree = "<group>"; };
 		9FF6D2AD232A7CBC00B4CAED /* mrg32k3a.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mrg32k3a.h; sourceTree = "<group>"; };
 		9FF6D2AE232BC9B700B4CAED /* vasicek.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = vasicek.h; sourceTree = "<group>"; };
@@ -92,7 +91,6 @@
 				9F0B0E432338AE1E009C35DD /* utilities.h */,
 				9FDC5C4D2354BEA6006E42D1 /* div.h */,
 				9FF6D2AD232A7CBC00B4CAED /* mrg32k3a.h */,
-				9FF6D2AB232A6D6300B4CAED /* armadillo.hpp */,
 				9FDB0C31232278CF00B048BB /* Heston.h */,
 				9FF2290D231F916900EF06F1 /* AAD.cpp */,
 				9F746E69231FA126006DE0C4 /* AAD.h */,

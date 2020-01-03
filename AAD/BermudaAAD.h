@@ -49,6 +49,16 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
         cov_d[i-int_Ta][i-int_Ta] += eps;
     }
     
+    /* Print all correlation adjoints */
+    /*print("cov matrix: ");
+    for(int i=Ta; i<Tb; ++i) { // i<Tb
+        cout << i << " & ";
+        for(int j=Ta; j<Tb; ++j) { // j<i+1
+            printf("%5.4f & ", cov_s[i-int_Ta][j-int_Ta].value());
+        }
+        cout << "\n";
+    }*/
+    
     lower = Chol(cov_s);
     lower_d = Chol(cov_d);
     

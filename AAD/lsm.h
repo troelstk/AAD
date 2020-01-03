@@ -17,7 +17,7 @@
 using namespace std;
 
 #include "mrg32k3a.h"
-#include "armadillo.hpp"
+// #include "armadillo.hpp"
 
 
 using namespace arma;

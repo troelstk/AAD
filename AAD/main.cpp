@@ -222,7 +222,7 @@ int main(int argc, const char * argv[]) {
     for(int i = 1; i<M; i++){
         volRisk[i][i] =  PhiRisk[i];
     }
-    number fixedRateRisk(r_fix);    
+    number fixedRateRisk(r_fix);
     
     
     /*print("\nAAD test European:");
@@ -348,6 +348,8 @@ int main(int argc, const char * argv[]) {
         }
         cout << "\n";
     }
+    
+
     
     /* Print all F adjoints */
     /*print("F adjoints");
