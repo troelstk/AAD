@@ -10,6 +10,7 @@
 #define Cholesky_h
 
 #include <cmath>
+#include <cassert>
   
 /* Computes the lower triangular Cholesky decomposition of input matrix A */
 template<class T>
@@ -42,13 +43,52 @@ vector<vector<T>> Chol( vector<vector<T>> A)
 template<class T>
 vector<T> simGauss( vector<vector<T>> & L, vector<double> & gauss)
 {
+    // Check LHS n_cols == RHS n_rows 
+    assert( L[0].size() == gauss.size() );
     size_t n = gauss.size();
-    vector<T> res(n);
+    vector<T> res(n, T(0.0));
     
     for(int i = 0; i<n; i++){
-        res[i] = 0.0;
         for(int j = 0; j<i+1; j++){
             res[i] += L[i][j] * gauss[j];
+        }
+    }
+    return res;
+}
+
+/* Matrix times column vector */
+template<class T, class S>
+vector<T> MatVecProd( vector<vector<T>> & L, vector<S> & gauss)
+{
+    assert( L[0].size() == gauss.size() );
+    size_t n = L.size();
+    vector<T> res(n, T(0.0));
+    
+    for(int i = 0; i<n; i++){
+        for(int j = 0; j<L[0].size(); j++){
+            res[i] += L[i][j] * gauss[j];
+        }
+    }
+    return res;
+}
+
+template<class T>
+vector<vector<T>> MatMatProd( vector<vector<T>> & LHS, vector<vector<T>> & RHS)
+{
+    size_t LHS_rows = LHS.size();
+    size_t LHS_cols = LHS[0].size();  // == RHS_rows
+    size_t RHS_rows = RHS.size();
+    size_t RHS_cols = RHS[0].size();
+    
+    assert( LHS_cols == RHS_rows );
+
+    vector<vector<T>> res(LHS_rows, vector<T>(RHS_cols, T(0.0)));
+    
+    for(int i = 0; i<LHS_rows; i++){
+        for(int j = 0; j<RHS_cols; j++){
+            for(int k = 0; k<LHS_cols; k++){
+                res[i][j] += LHS[i][k] * RHS[k][j];
+            }
         }
     }
     return res;

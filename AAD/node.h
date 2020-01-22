@@ -12,6 +12,7 @@
 using namespace std;
 
 #include <string>
+#include <iostream>
 #include <vector>
 #include <memory>
 
@@ -40,9 +41,24 @@ public:
         return mAdjoint;
     }
     
+    size_t myN() {
+        return n;
+    }
+    
     // Method to add to node w_j's childrens adjoints
     void propagateOne()
     {
+        // Return if zero childs (nothing to propagate) or mAdjoint is 0 (no need to propagate as all terms added are just 0)
+        if ( !n || !mAdjoint) return;
+        
+        for(size_t i = 0; i < n; ++i ) {
+            *(pAdjPtrs[i]) += pDerivatives[i] * mAdjoint;
+        }
+    }
+    
+    void propagateSpecialOne()
+    {
+        cout << myN() <<  endl;
         // Return if zero childs (nothing to propagate) or mAdjoint is 0 (no need to propagate as all terms added are just 0)
         if ( !n || !mAdjoint) return;
         
