@@ -392,32 +392,102 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
     size_t M1 = initF.size();
     size_t M = int_Tb-int_Ta;
     
-    double eps = 10e-10; // Added to diagonal to make matrix positive definite
+    double eps = 10e-8 ; //10e-8; // Added to diagonal to make matrix positive definite
     
     vector<vector<T>> cov_s(M, vector<T>(M));
     vector<vector<T>> lower(M, vector<T>(M));
     vector<vector<double>> cov_d(M, vector<double>(M));
     vector<vector<double>> lower_d(M, vector<double>(M));
     
+    mat Cov(M, M, fill::zeros);
     // Fill covariance vec of vecs
     for(int i = int_Ta; i<Tb; ++i){
         for(int j = int_Ta; j<Tb; ++j){
             T cov_ij(corr[i][j] * vol[i][i] * vol[j][j]);
             cov_s[i-int_Ta][j-int_Ta] = cov_ij ;
             cov_d[i-int_Ta][j-int_Ta] = cov_ij.value();
+            Cov(i-int_Ta, j-int_Ta) = cov_ij.value();
         }
         cov_s[i-int_Ta][i-int_Ta] += eps;
         cov_d[i-int_Ta][i-int_Ta] += eps;
+        Cov(i-int_Ta, i-int_Ta) += eps;
+    }
+    mat P; // U
+    vec eigval; // D
+    eig_sym(eigval, P, Cov);
+    //print(eigval);
+    //print(P);
+    vec largest_n_eigvals = eigval.tail_rows(dim_n);
+    mat H_n = diagmat(largest_n_eigvals);
+    mat L_n = sqrt(H_n);
+    mat P_n = P.tail_cols(dim_n);
+    mat B_n = P_n * L_n;
+    /*
+    mat approxCov = B_n * B_n.t();
+    
+    print("B*Bt is ");
+    print(approxCov);*/
+    
+    vector<vector<T>> L_num(dim_n, vector<T>(dim_n, T(0.0)));
+    vector<vector<T>> eig_num(dim_n, vector<T>(dim_n, T(0.0)));
+    vector<vector<T>> P_num(M, vector<T>(dim_n, T(0.0))); // (rows, vector<T>(cols, T(0.0)));
+    vector<vector<T>> B_num(M, vector<T>(dim_n, T(0.0)));
+
+    
+    for(int i = 0; i<dim_n; ++i){
+        eig_num[i][i] = T(largest_n_eigvals(i));
+        L_num[i][i] = sqrt(eig_num[i][i]);
     }
     
-   
+    // Copy eigen vectors of largest eigenvalues to overloaded P
+    for(int i = 0; i<M; i++){ // Rows
+        for(int j = 0; j<dim_n; j++){ // cols
+            P_num[i][j] = T(P_n(i,j));
+        }
+    }
+
+    B_num = MatMatProd(P_num, L_num);
+    
+    //vector<vector<T>> test = MatMatProd(MatMatProd(Pert, cov_s), transp(Pert));
+    //print("Test P cov P^t");
+    //print_val(test);
+    
+    vector<vector<T>> lower2(M, vector<T>(M));
+    lower2 = Chol2(cov_s, B_num);
     lower = Chol(cov_s);
-    lower_d = Chol(cov_d);
+    print("Chol lower");
+    print_val(lower);
+    
+    /*vector<vector<T>> B_num_swap(M, vector<T>(dim_n, T(0.0)));
+    for(int i=0; i<M; ++i) {
+        B_num_swap[i][1] = B_num[i][0];
+        B_num_swap[i][0] = B_num[i][1];
+    }
+    
+    vector<vector<T>> test = MatMatProd(MatMatProd(Pert, cov_s), transp(Pert));
+    print("Test P cov P^t");
+    print_val(test);
+    
+    //mat low_test = arma::chol(Cov);
+    //print("Lower arma");
+    //print(low_test.t());
+   
+    //lower = Chol2(test, B_num);
+    //lower_d = Chol2(cov_d, B_n);
 
     
     
-    // Pre compute product, instead of doing it in inner most loop
+    print("Chol old lower");
+    vector<vector<T>> lower2 = Chol(cov_s);
+    print_val(lower2);
+    
+    vector<vector<T>> lowerProd = MatMatProd(lower, transp(lower));
+    
+    print_val( lowerProd );*/
+    
+    
     vector<vector<T>> corr_vol(M1, vector<T>(M1));
+    // Pre compute product, instead of doing it in inner most loop    vector<vector<T>> corr_vol(M1, vector<T>(M1));
     for(int k = 1; k < int_Tb; ++k)
     {
         for(int j = 1; j <= k; ++j ) {
@@ -435,7 +505,6 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
     
     vector<double> initFdouble;
     for(auto & x : initF ) {initFdouble.push_back(double(x));}
-    
     
     { // Scope to destruct everything declared in pre-simulation and backward loop
         mrg32k3a myRNG(seed1, seed2);
@@ -474,9 +543,9 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
                             sum += double(corr_vol[k][j]) * Fj / (1.0 + double(tau) * Fj);
                         }
                         // For cholesky of Cov
-                        lnF[k] += vol[k][k].value()*tau.value()*sum*dt - vol[k][k].value()*vol[k][k].value()/2.0*dt + sqDt*gauss_cov[k-int_Ta];
+                        lnF[k] += double(vol[k][k])*double(tau)*sum*dt - double(vol[k][k])*double(vol[k][k])/2.0*dt + sqDt*gauss_cov[k-int_Ta];
                         // For PCA of Cov
-                        //lnF[k] += vol[k][k].value()*tau.value()*sum*dt - vol[k][k].value()*vol[k][k].value()/2.0*dt + sqDt*gauss_n[k-int_Ta];
+                        //lnF[k] += double(vol[k][k])*double(tau)*sum*dt - double(vol[k][k])*double(vol[k][k])/2.0*dt + sqDt*gauss_n[k-int_Ta];
                         // For PCA of Corr
                         //lnF[k] += double(vol[k][k])*double(tau)*sum*dt - double(vol[k][k])*double(vol[k][k])/2.0*dt + sqDt*double(vol[k][k])*gauss_corr[k-int_Ta];
                     } // rates
@@ -578,7 +647,7 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
                 myRNG.nextG(gauss);
                 //vector<T> gauss_n = MatVecProd( B_num, gauss);
                 //vector<T> gauss_corr = MatVecProd( B_num, gauss);
-                vector<T> gauss_cov = simGauss(lower, gauss);
+                vector<T> gauss_cov = MatVecProd(lower, gauss);
                 for(int k = int_ExTime; k < int_Tb; ++k)
                 {
                     T sum(0.0);
@@ -617,21 +686,11 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
     }
     print_DEBUG("Main forward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");
     
-    for(auto & col : lower) {
-        for(auto & elem : col) {
-            cout << elem.adjoint() << " ";
-        }
-        print("");
-    }
+    print_adj(lower);
     
     number::propagateMarkToStart();
     
-    for(auto & col : lower) {
-        for(auto & elem : col) {
-            cout << elem.adjoint() << " ";
-        }
-        print("");
-    }
+    print_adj(lower);
    
     return end_result/double(nPaths) ;
 }

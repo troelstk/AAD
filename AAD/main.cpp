@@ -178,7 +178,7 @@ int main(int argc, const char * argv[]) {
     
     
     print("\nBermuda test: ");
-    nPaths_presim = 2000;
+    nPaths_presim = 1000;
     nPaths = 2000; // Main
     
     nSteps_y = 4;
@@ -269,7 +269,8 @@ int main(int argc, const char * argv[]) {
 
     number bermudanAAD;
     //bermudanAAD = LMM_BermudaSwaptionAAD(volRisk, corrRisk, F_Risk, exTimes20, t, Ta, Tb, fixedRateRisk, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
-    bermudanAAD = LMM_BermudaSwaptionAADChol(volRisk, corrRisk, F_Risk, exTimes20, t, Ta, Tb, fixedRateRisk, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
+    bermudanAAD = LMM_BermudaSwaptionAAD(volRisk, corrRisk, F_Risk, exTimes20, t, Ta, Tb, fixedRateRisk, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
+    print("done2");
     auto timeAADBermuda = float( clock() - bermAADstart )/ float( CLOCKS_PER_SEC);
     print("Bermudan value AAD: ", bermudanAAD.value(), " in ", timeAADBermuda, " seconds");
     
@@ -290,7 +291,7 @@ int main(int argc, const char * argv[]) {
     double eps = 0.000001;
     
     /* Compare forward rate adjoints with bump-and-revalue */
-    /*print("Compare forward rate adjoints with bump-and-revalue");
+    print("Compare forward rate adjoints with bump-and-revalue");
     for(int idx=0; idx<Tb; ++idx) {
         // Bump one at the time and compute FD approx:
         F20[idx] += eps;
@@ -303,10 +304,10 @@ int main(int argc, const char * argv[]) {
         printf("%1.2f %% & ", (AAD_approx-FD_approx )/ AAD_approx*100 );
         //printf("%11.10f,%11.10f\n", FD_approx, AAD_approx );
     }
-    cout << "\n";*/
+    cout << "\n";
     
     /* Compare vol adjoints with bump-and-revalue */
-    /*print("Compare vol adjoints with bump-and-revalue");
+    print("Compare vol adjoints with bump-and-revalue");
     for(int idx=9; idx<Tb; ++idx) {
         // Bump one at the time and compute FD approx:
         vol20[idx][idx] += eps;
@@ -318,7 +319,7 @@ int main(int argc, const char * argv[]) {
         //printf("%1.2f %% & ", (AAD_approx-FD_approx )/ AAD_approx*100 );
         printf("%2.1d: %11.10f,%11.10f,%11.10f\n", idx, AAD_approx, FD_approx, AAD_approx/FD_approx);
     }
-    cout << "\n";*/
+    cout << "\n";
     
     /* Compare correlation adjoints with bump-and-revalue */
     print("Compare correlation adjoints with bump and revalue");
@@ -397,5 +398,4 @@ int main(int argc, const char * argv[]) {
     
     return 0;
 }
-
 

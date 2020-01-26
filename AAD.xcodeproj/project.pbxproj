@@ -31,6 +31,7 @@
 		9F3E1A782375A06D0093A379 /* Bermuda.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Bermuda.h; sourceTree = "<group>"; };
 		9F746E69231FA126006DE0C4 /* AAD.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AAD.h; sourceTree = "<group>"; };
 		9F746E6A231FB6A6006DE0C4 /* gaussians.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gaussians.h; sourceTree = "<group>"; };
+		9F8A393323DC5A2D001C549E /* LAAD.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LAAD.h; sourceTree = "<group>"; };
 		9F937058233B6F3A008BE349 /* libarmadillo.9.70.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libarmadillo.9.70.2.dylib; path = ../../../../../../usr/local/Cellar/armadillo/9.700.2/lib/libarmadillo.9.70.2.dylib; sourceTree = "<group>"; };
 		9FD1777D232F694800D6C6A2 /* swap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = swap.h; sourceTree = "<group>"; };
 		9FDB0C31232278CF00B048BB /* Heston.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Heston.h; sourceTree = "<group>"; };
@@ -104,6 +105,7 @@
 				9FD1777D232F694800D6C6A2 /* swap.h */,
 				9F0B0E422337AC03009C35DD /* LMM.h */,
 				9F3E1A782375A06D0093A379 /* Bermuda.h */,
+				9F8A393323DC5A2D001C549E /* LAAD.h */,
 				9FE0AFE123A78A1700113EE2 /* Cholesky.h */,
 				9F00ABE52382BF0100693166 /* BermudaAAD.h */,
 				9FF22907231D562E00EF06F1 /* main.cpp */,

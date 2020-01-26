@@ -45,6 +45,29 @@ print(vector<vector<double>> & input_vec_of_vecs) {
     cout << endl;
 }
 
+template<class T> inline void
+print_adj(vector<vector<T>> & input_vec_of_vecs) {
+    for(auto & col : input_vec_of_vecs) {
+        for(auto & elem : col) {
+            printf("%6.1f ", elem.adjoint());
+        }
+        cout << "\n";
+    }
+    cout << endl;
+}
+
+template<class T> inline void
+print_val(vector<vector<T>> & input_vec_of_vecs) {
+    for(auto & col : input_vec_of_vecs) {
+        for(auto & elem : col) {
+            printf("%8.6f ", elem.value());
+        }
+        cout << "\n";
+    }
+    cout << endl;
+}
+
+
 // Needed for below print function
 struct expand_type {
   template<typename... T>
