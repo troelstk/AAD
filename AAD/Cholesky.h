@@ -44,62 +44,87 @@ template<class T>
 vector<vector<T>> Chol2( vector<vector<T>> & C, vector<vector<T>> & B)
 {
     
-    int m = int(C.size()); // rows
-    int n = int(C[0].size()); // cols
+    int n = int(C.size()); // rows
+    int m = int(B[0].size()); // cols
     
-    vector<vector<T>> L(m, vector<T>(n, T(0.0)));
-    T C_test = T(0.0);
+    vector<vector<T>> L(n, vector<T>(m, T(0.0)));
+    
     for(int i=0; i<m; ++i) {
-
-        
-        for(int j=i+1; j<n; ++j){
-            C_test = 0.0;
+        for(int j=i; j<n; ++j){
+            C[i][j] = 0.0;
+            // Reduced rank step
             for(int k = 0; k<m; ++k)
             {
-                C_test += B[i][k] * B[j][k];
+                C[i][j] += B[i][k] * B[j][k];
             }
             for(int k = i-1; k >= 0; --k){
-                C_test -= L[i][k] * L[j][k];
+                C[i][j] -= L[i][k] * L[j][k];
             }
             if(j==i) {
-                L[i][i] = sqrt(C_test);
+                L[i][i] = sqrt(C[i][j]);
             }
             else {
-                L[j][i] = C_test / L[i][i] ;
+                L[j][i] = C[i][j] / L[i][i] ;
             }
         }
-        
     }
     return L;
 }
 
+//C_test = 0.0;
+/*C[i][i] = 0.0;
+for(int k = 0; k<m; ++k)
+{
+    C[i][i] += B[i][k] * B[i][k];
+}
+for(int k = i-1; k >= 0; --k){
+    C[i][i] -= L[i][k] * L[i][k];
+}
+L[i][i] = sqrt(C[i][i]);*/
+
 template<class T>
 void Chol2Adj( vector<vector<T>> & C,
-                           vector<vector<T>> & B,
-                           vector<vector<T>> & L ) {
+               vector<vector<T>> & B,
+               vector<vector<T>>  L ) {
     
-    int m = C.size(); // rows
-    int n = C[0].size(); // cols
+    int n = int(C.size()); // rows of C == cols of C == rows of B
+    int m = int(B[0].size()); // cols of B (dim_n == rank of cov)
+    
+    //print("n x m ", n, "x", m);
+    //print_adj(L);
     
     for(int i=m-1; i>=0; --i) {
+        //C[i][i].adjoint() = 0.5 * L[i][i].adjoint()/double(L[i][i]);
         for(int j=n-1; j>=i; --j){
             if(j==i) {
-                C[i][i].adjoint() = 0.5 * L[i][i].adjoint()/L[i][i];
+                //print("C",i,j," adj pre ", C[i][j].adjoint(), " L adj pre ", L[i][i].adjoint() );
+                C[i][i].adjoint() = 0.5 * L[i][i].adjoint() / double(L[i][i]);
+                //print("C",i,j," adj post ", C[i][j].adjoint(), " L adj post ", L[i][i].adjoint() );
             }
             else {
-                C[i][j].adjoint() = L[j][i].adjoint()/L[i][i] ;
-                L[i][i].adjoint() -= L[j][i].adjoint()*L[j][i]/L[i][i] ;
+                //print("C",i,j," adj pre ", C[i][j].adjoint(), " L adj pre ", L[i][i].adjoint() );
+                C[i][j].adjoint() = L[j][i].adjoint() / double(L[i][i]);
+                L[i][i].adjoint() -= L[j][i].adjoint() * double(L[j][i]) / double(L[i][i]);
+                //print("C",i,j," adj post ", C[i][j].adjoint(), " L adj post ", L[i][i].adjoint() );
             }
-            for(int k =0; k<i; ++k){
-                L[i][k].adjoint() -= C[i][j].adjoint() * L[j][k];
-                L[j][k].adjoint() -= C[i][j].adjoint() * L[i][k];
+            //print("C[",i, "][",j,"] adj ", C[i][j].adjoint(), " L adj ", L[i][i].adjoint(), " L val ", double(L[i][i]) );
+            
+            //C[i][j].adjoint() = L[j][i].adjoint()/double(L[i][i]) ;
+            //L[i][i].adjoint() -= L[j][i].adjoint() * double(L[j][i])/double(L[i][i]) ;
+            for(int k=0; k<i; ++k){
+                L[i][k].adjoint() -= C[i][j].adjoint() * double(L[j][k]);
+                //print(L[i][k].adjoint());
+                L[j][k].adjoint() -= C[i][j].adjoint() * double(L[i][k]);
+                //print(L[j][k].adjoint());
             }
             for(int k = m-1; k>=0; --k){
-                B[i][k].adjoint() -= C[i][j].adjoint() * L[j][k];
-                B[j][k].adjoint() -= C[i][j].adjoint() * L[i][k];
+                B[i][k].adjoint() += C[i][j].adjoint() * double(B[j][k]);
+                B[j][k].adjoint() += C[i][j].adjoint() * double(B[i][k]);
             }
         }
     }
+    //print("L post");
+    //print_adj(L);
 }
 
 template<class T> inline
@@ -111,7 +136,7 @@ vector<vector<T>> transp(vector<vector<T>> A ) {
     
     for(size_t i=0; i<m; ++i) {
         for(size_t j=0; j<n; ++j){
-            res[i][j] = A[j][i];
+            res[j][i] = A[i][j];
         }
     }
     return res;
@@ -149,6 +174,27 @@ vector<T> MatVecProd( vector<vector<T>> & L, vector<S> & gauss)
     }
     return res;
 }
+
+/* Matrix times column vector */
+template<class T>
+vector<vector<T>> MatMatAdd( vector<vector<T>> LHS, vector<vector<T>> RHS )
+{
+    assert( LHS[0].size() == RHS[0].size() );
+    assert( LHS.size() == RHS.size() );
+    
+    size_t m = LHS.size(); // rows
+    size_t n = LHS[0].size(); // cols
+    
+    vector<vector<T>> res(m, vector<T>(n, T(0.0)));
+    
+    for(int i = 0; i<m; i++){
+        for(int j = 0; j<n; j++){
+            res[i][j] = LHS[i][j] + LHS[i][j];
+        }
+    }
+    return res;
+}
+
 
 template<class T>
 vector<vector<T>> MatMatProd( vector<vector<T>> LHS, vector<vector<T>> RHS)

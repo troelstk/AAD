@@ -30,7 +30,7 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
     size_t M1 = initF.size();
     size_t M = int_Tb-int_Ta;
     
-    double eps = 10e-10; // Added to diagonal to make matrix positive definite
+    //double eps = 10e-10; // Added to diagonal to make matrix positive definite
     
     /*vector<vector<T>> cov_s(M, vector<T>(M));
     vector<vector<T>> lower(M, vector<T>(M));
@@ -119,6 +119,7 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
     for(auto & x : initF ) {initFdouble.push_back(double(x));}
     
     
+    if(exTimes.size() > 2)
     { // Scope to destruct everything declared in pre-simulation and backward loop
         mrg32k3a myRNG(seed1, seed2);
         myRNG.init(dim_n);
@@ -224,10 +225,11 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
             
             beta.col(t) = V * D.t() * Sig * U.t() * vec(ITMY) ;
         } // Backward loop
+        print_DEBUG("Presim backward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");
+        begin_time = clock();
     } // Scope
     
-    print_DEBUG("Presim backward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");
-    begin_time = clock();
+    
     
     // Main-simulation
     vector<T> F;
@@ -392,25 +394,24 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
     size_t M1 = initF.size();
     size_t M = int_Tb-int_Ta;
     
-    double eps = 10e-8 ; //10e-8; // Added to diagonal to make matrix positive definite
-    
     vector<vector<T>> cov_s(M, vector<T>(M));
-    vector<vector<T>> lower(M, vector<T>(M));
+    vector<vector<T>> lower(M, vector<T>(dim_n));
     vector<vector<double>> cov_d(M, vector<double>(M));
-    vector<vector<double>> lower_d(M, vector<double>(M));
+    vector<vector<double>> lower_d(M, vector<double>(dim_n));
     
     mat Cov(M, M, fill::zeros);
     // Fill covariance vec of vecs
     for(int i = int_Ta; i<Tb; ++i){
         for(int j = int_Ta; j<Tb; ++j){
-            T cov_ij(corr[i][j] * vol[i][i] * vol[j][j]);
-            cov_s[i-int_Ta][j-int_Ta] = cov_ij ;
-            cov_d[i-int_Ta][j-int_Ta] = cov_ij.value();
-            Cov(i-int_Ta, j-int_Ta) = cov_ij.value();
+            //cov_s[i-int_Ta][j-int_Ta] = corr[i][j] * vol[i][i] * vol[j][j] ;
+            //T cov_ij(corr[i][j] * vol[i][i] * vol[j][j]);
+            
+            T cov_ij(corr[i][j]);
+            cov_s[i-int_Ta][j-int_Ta] = cov_ij;
+            
+            cov_d[i-int_Ta][j-int_Ta] = double(cov_ij);
+            Cov(i-int_Ta, j-int_Ta) = double(cov_ij);
         }
-        cov_s[i-int_Ta][i-int_Ta] += eps;
-        cov_d[i-int_Ta][i-int_Ta] += eps;
-        Cov(i-int_Ta, i-int_Ta) += eps;
     }
     mat P; // U
     vec eigval; // D
@@ -424,9 +425,21 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
     mat B_n = P_n * L_n;
     /*
     mat approxCov = B_n * B_n.t();
-    
     print("B*Bt is ");
     print(approxCov);*/
+    
+    vector<vector<T>> Pert =
+      {{T(1.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0) },
+       {T(0.0), T(1.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0) },
+       {T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(1.0), T(0.0) },
+       {T(0.0), T(0.0), T(0.0), T(1.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0) },
+       {T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(1.0) },
+       {T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(1.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0) },
+       {T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(1.0), T(0.0), T(0.0), T(0.0), T(0.0) },
+       {T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(1.0), T(0.0), T(0.0), T(0.0) },
+       {T(0.0), T(0.0), T(1.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0) },
+       {T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(1.0), T(0.0), T(0.0) },
+       {T(0.0), T(0.0), T(0.0), T(0.0), T(1.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0) }};
     
     vector<vector<T>> L_num(dim_n, vector<T>(dim_n, T(0.0)));
     vector<vector<T>> eig_num(dim_n, vector<T>(dim_n, T(0.0)));
@@ -452,42 +465,51 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
     //print("Test P cov P^t");
     //print_val(test);
     
-    vector<vector<T>> lower2(M, vector<T>(M));
+    /*vector<vector<T>> lower2(M, vector<T>(M));
     lower2 = Chol2(cov_s, B_num);
-    lower = Chol(cov_s);
-    print("Chol lower");
+
+    print("Chol2 of cov_s");
+    print_val(lower2);
+    
+    vector<vector<T>> BBT = MatMatProd(B_num, transp(B_num));
+    print("B*B^T is ");
+    print_val(BBT); // == cov_s
+    print("cov_s");
+    print_val(cov_s);*/
+    
+    /*lower = Chol2(cov_s, B_num);
+    print("Chol2 of B*B^T");
+    print_val(lower);
+    
+    vector<vector<T>> BBT2 = MatMatProd(lower, transp(lower));
+    print("Test if L*L^T from BBT yields cov_s ");
+    print_val(BBT2);
+    */
+    vector<vector<T>> A = MatMatProd(MatMatProd(transp(Pert), cov_s), Pert);
+    print("A= P^t*C*P");
+    print_val(A);
+    //print("eig vecs");
+    //print(P_n);
+
+    lower = Chol2(A, B_num);
+
+    print("Chol of A is ");
     print_val(lower);
     
     /*vector<vector<T>> B_num_swap(M, vector<T>(dim_n, T(0.0)));
     for(int i=0; i<M; ++i) {
         B_num_swap[i][1] = B_num[i][0];
         B_num_swap[i][0] = B_num[i][1];
+    }*/
+    
+    for(int i = 0; i<M; i++){ // Rows
+        for(int j = 0; j<dim_n; j++){ // cols
+            lower_d[i][j] = double(lower[i][j]);
+        }
     }
     
-    vector<vector<T>> test = MatMatProd(MatMatProd(Pert, cov_s), transp(Pert));
-    print("Test P cov P^t");
-    print_val(test);
-    
-    //mat low_test = arma::chol(Cov);
-    //print("Lower arma");
-    //print(low_test.t());
-   
-    //lower = Chol2(test, B_num);
-    //lower_d = Chol2(cov_d, B_n);
-
-    
-    
-    print("Chol old lower");
-    vector<vector<T>> lower2 = Chol(cov_s);
-    print_val(lower2);
-    
-    vector<vector<T>> lowerProd = MatMatProd(lower, transp(lower));
-    
-    print_val( lowerProd );*/
-    
-    
     vector<vector<T>> corr_vol(M1, vector<T>(M1));
-    // Pre compute product, instead of doing it in inner most loop    vector<vector<T>> corr_vol(M1, vector<T>(M1));
+    // Pre compute product, instead of doing it in inner most loop
     for(int k = 1; k < int_Tb; ++k)
     {
         for(int j = 1; j <= k; ++j ) {
@@ -508,10 +530,10 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
     
     { // Scope to destruct everything declared in pre-simulation and backward loop
         mrg32k3a myRNG(seed1, seed2);
-        //myRNG.init(dim_n);
-        //vector<double> gauss(dim_n);
-        myRNG.init(M);
-        vector<double> gauss(M);
+        myRNG.init(dim_n);
+        vector<double> gauss(dim_n);
+        //myRNG.init(M);
+        //vector<double> gauss(M);
         vector<vector<double>> SR(nPaths_presim, vector<double>(exTimes.size()));
         vector<vector<double>> Libor(nPaths_presim, vector<double>(exTimes.size()));
         vector<vector<double>> swap_vals(nPaths_presim, vector<double>(exTimes.size()));
@@ -523,6 +545,9 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
         for(int i = 0; i<nPaths_presim; ++i) {
             for(int t = 1; t<exTimes.size(); ++t ) {
                 //print("exTime is ", exTimes[t], " t is ", t);
+                
+                // Inputs: t, exTimes, nSteps_y, initFdouble, lower, corr_vol, tau, vol, r_fix, int_Tb, notional, disc
+                // Outputs: swap_val, floating_swap_rate, Fdouble
                 double swap_val(0.0);
                 int int_ExTime = (int)(exTimes[t]);
                 int nSteps = nSteps_y * double(exTimes[t] - exTimes[t-1]);
@@ -531,9 +556,9 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
                 for(int n = 0; n<nSteps; ++n) {
                     myRNG.nextG(gauss);
                     //vec gauss_n = B_n * vec(gauss);
-                    //vec gauss_corr = B_n * vec(gauss);
-                    vector<double> gauss_cov = simGauss( lower_d, gauss);
-                    //print(gauss_n);
+                    vec gauss_corr = B_n * vec(gauss);
+                    //vector<double> gauss_cov = MatVecProd( lower_d, gauss);
+                    //print(gauss_cov);
                     //print_DEBUG("Time is ", exTimes[t-1] + dt*(n+1));
                     for(int k = int_ExTime; k < int_Tb; ++k)
                     {
@@ -542,12 +567,12 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
                             double Fj = exp(lnF[j]);
                             sum += double(corr_vol[k][j]) * Fj / (1.0 + double(tau) * Fj);
                         }
-                        // For cholesky of Cov
-                        lnF[k] += double(vol[k][k])*double(tau)*sum*dt - double(vol[k][k])*double(vol[k][k])/2.0*dt + sqDt*gauss_cov[k-int_Ta];
+                        // For cholesky and PCA of Cov
+                        //lnF[k] += double(vol[k][k])*double(tau)*sum*dt - double(vol[k][k])*double(vol[k][k])/2.0*dt + sqDt*gauss_cov[k-int_Ta];
                         // For PCA of Cov
                         //lnF[k] += double(vol[k][k])*double(tau)*sum*dt - double(vol[k][k])*double(vol[k][k])/2.0*dt + sqDt*gauss_n[k-int_Ta];
                         // For PCA of Corr
-                        //lnF[k] += double(vol[k][k])*double(tau)*sum*dt - double(vol[k][k])*double(vol[k][k])/2.0*dt + sqDt*double(vol[k][k])*gauss_corr[k-int_Ta];
+                        lnF[k] += double(vol[k][k])*double(tau)*sum*dt - double(vol[k][k])*double(vol[k][k])/2.0*dt + sqDt*double(vol[k][k])*gauss_corr[k-int_Ta];
                     } // rates
                 } // steps
                 // Now have F_k(T_alpha) for k=10,..,M
@@ -560,7 +585,6 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
                 SR[i][t] = floating_swap_rate;
                 Libor[i][t] = Fdouble[ int_ExTime ];
                 swap_vals[i][t] = swap_val;
-                
             } // exTimes
         } // paths
         print_DEBUG("Presim forward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");
@@ -614,7 +638,6 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
             beta.col(t) = V * D.t() * Sig * U.t() * vec(ITMY) ;
         } // Backward loop
     } // Scope
-    
     print_DEBUG("Presim backward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");
     begin_time = clock();
     
@@ -629,13 +652,15 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
     
     vector<double> swap_rates(nPaths);
     mrg32k3a myRNG(seed2, seed1);
-    myRNG.init(M);
-    vector<double> gauss(M);
+    myRNG.init(dim_n);
+    vector<double> gauss(dim_n);
+    //myRNG.init(M);
+    //vector<double> gauss(M);
     
     number::tape->mark();
     for(int i = 0; i<nPaths; ++i){
         number::tape->rewindToMark();
-        double eta = 1;
+        double eta = 1.0;
         T swap_path(0.0);
         for(int t = 1; t<exTimes.size(); ++t ){
             //print("exTime is ", exTimes[t], " t is ", t);
@@ -646,8 +671,8 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
             for(int n = 0; n<nSteps; ++n) {
                 myRNG.nextG(gauss);
                 //vector<T> gauss_n = MatVecProd( B_num, gauss);
-                //vector<T> gauss_corr = MatVecProd( B_num, gauss);
-                vector<T> gauss_cov = MatVecProd(lower, gauss);
+                vector<T> gauss_corr = MatVecProd( B_num, gauss);
+                //vector<T> gauss_cov = MatVecProd(lower, gauss);
                 for(int k = int_ExTime; k < int_Tb; ++k)
                 {
                     T sum(0.0);
@@ -656,8 +681,8 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
                         sum += corr_vol[k][j] * Fj / (1.0 + tau * Fj);
                     }
                     //lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*gauss_n[k-int_Ta];
-                    //lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*vol[k][k]*gauss_corr[k-int_Ta];
-                    lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*gauss_cov[k-int_Ta];
+                    lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*vol[k][k]*gauss_corr[k-int_Ta];
+                    //lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*gauss_cov[k-int_Ta];
                     //print(lnF[k].value());
                 } // rates
             } // steps
@@ -674,24 +699,132 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
             swap_path += eta * swap_val;
             
             double EY2 = t < exTimes.size() - 1 ?
-                // continuation value - at last ex time the eta value computed below will never be used (so 0.0 could be anything)
+                // continuation value - at last ex time the eta value computed below will never be used (so 0.0 could be anything), just avoid beta of last t
                 as_scalar(vec( { 1.0, double(floating_swap_rate), double(F[ int_ExTime ]) }).t() * beta.col(t)) : 0.0;
             eta *= EY2 > swap_val ? 1.0 : 0.0; // 1 if continue, 0 if exercise
             //print("Swap value ", swap_val.value());
         }
         //print("Swap path is ", swap_path.value());
+        //Chol2Adj(cov_s, B_num, lower);
+        
+        /*for(int i = 0; i<M; i++){ // Rows
+            for(int j = 0; j<dim_n; j++){ // cols
+                lower[i][j].adjoint() = 0.0;
+            }
+        }
+        vector<vector<T>> lower_test = lower;
+        
+        for(int i = 0; i<M; i++){ // Rows
+            for(int j = 0; j<dim_n; j++){ // cols
+                lower_test[i][j].adjoint() = lower[i][j].adjoint()/double(i+1);
+            }
+        }*/
+        
+        
         swap_path.propagateToMark();
-        //print(swap_path.value());
+        //Chol2Adj(cov_s, B_num, lower);
+
         end_result += swap_path;
+        //print("swap_path is ", double(swap_path));
     }
     print_DEBUG("Main forward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");
+    print("Simulation done ");
     
+    print("lower");
     print_adj(lower);
+    print("cov_s");
+    print_adj(cov_s);
+    print("B_num");
+    print_adj(B_num);
+    
+    //Chol2Adj(cov_s, B_num, lower);
+    print("Chol2Adj");
+    
+    print("lower");
+    print_adj(lower);
+    print("cov_s");
+    print_adj(cov_s);
+    
+    vector<vector<T>> cov_test(M, vector<T>(M, T(0.0)));
+    
+    for(int i = 0; i<M; i++){ // Rows
+        for(int j = 0; j<=i; j++){ // cols
+            cov_test[i][j] = cov_s[i][j].adjoint();
+        }
+    }
+    
+    vector<vector<T>> G = MatMatProd(cov_test, transp(cov_test));
+    print("G");
+    print_val(G);
+    
+    mat Pert_m(Pert.size(), Pert[0].size()), G_m(G.size(), G[0].size()) ;
+    
+    for(int i = 0; i<Pert.size(); ++i){
+        for(int j = 0; j<Pert[0].size(); ++j){
+            Pert_m(i,j) = double(Pert[i][j]);
+            G_m(i,j) = double(G[i][j]);
+        }
+    }
+    
+    mat U1;
+    mat V1;
+    
+    mat U_L, V_L;
+    vec s_L;
+    svd(U_L,s_L,V_L,Cov);
+    
+    U1 = U_L.head_cols(dim_n);
+    
+    mat A_bar = 0.5 * (Pert_m.t()*G_m*Pert_m - ( eye(size(G_m)) - U1*U1.t() ) *
+                       Pert_m.t()*G_m*Pert_m * ( eye(size(G_m)) - U1*U1.t() ) ) ;
+    
+    print(A_bar);
+    mat PAPt = Pert_m * A_bar * Pert_m.t();
+    print(PAPt );
+    
+    for(int i = 0; i<M; i++){ // Rows
+        for(int j = 0; j<M; j++){ // cols
+            cov_s[i][j].adjoint() += PAPt(i,j);
+        }
+    }
+    
+
     
     number::propagateMarkToStart();
+    print("PropagatedMarkToStart");
     
+    print("lower");
     print_adj(lower);
-   
+    print("cov_s");
+    print_adj(cov_s);
+
+    
+    //print("Corr pre prop");
+    //print_adj(corr);
+    for(int i = int_Ta; i<int_Tb; ++i){
+        for(int j = int_Ta; j<int_Tb; ++j){
+            int i2 = i-int_Ta;
+            int j2 = j-int_Ta;
+            
+            
+            //print_adj(cov_s[i2][j2]);
+            //print( prev(cov_s[i2][j2].getNode())->adjoint() );
+            // Propagate cov_s node
+            /*cov_s[i2][j2].getNode()->propagateOne();
+            
+            //print_adj(cov_s[i2][j2]);
+            //print( prev(cov_s[i2][j2].getNode())->adjoint() );
+            // Propagate previous node
+            auto prevNode = cov_s[i2][j2].getNode();
+            for(int k = 0; k<10; k++){
+                prevNode = prev(prevNode);
+                prevNode->propagateOne();
+            }*/
+        }
+    }
+    //print("Corr post prop");
+    //print_adj(corr);
+    
     return end_result/double(nPaths) ;
 }
 

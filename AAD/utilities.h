@@ -46,12 +46,30 @@ print(vector<vector<double>> & input_vec_of_vecs) {
 }
 
 template<class T> inline void
+print_adj(T & elem) {
+    printf("%6.1f, ", elem.adjoint());
+}
+
+template<class T> inline void
+print_adj(vector<T> & input_vec) {
+    for(auto & elem : input_vec) {
+        print_adj(elem);
+    }
+    cout << endl;
+}
+
+template<class T> inline void
 print_adj(vector<vector<T>> & input_vec_of_vecs) {
     for(auto & col : input_vec_of_vecs) {
-        for(auto & elem : col) {
-            printf("%6.1f ", elem.adjoint());
-        }
-        cout << "\n";
+        print_adj(col);
+    }
+    cout << endl;
+}
+
+template<class T> inline void
+print_val(vector<T> & input_vec) {
+    for(auto & elem : input_vec) {
+        printf("%8.6f, ", elem.value());
     }
     cout << endl;
 }
@@ -59,10 +77,7 @@ print_adj(vector<vector<T>> & input_vec_of_vecs) {
 template<class T> inline void
 print_val(vector<vector<T>> & input_vec_of_vecs) {
     for(auto & col : input_vec_of_vecs) {
-        for(auto & elem : col) {
-            printf("%8.6f ", elem.value());
-        }
-        cout << "\n";
+        print_val(col);
     }
     cout << endl;
 }

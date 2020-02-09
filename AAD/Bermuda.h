@@ -256,8 +256,6 @@ template<class T> T LMM_BermudaSwaption2(vector<vector<T>> & vol, vector<vector<
     size_t M1 = initF.size();
     size_t M = int_Tb-int_Ta;
     
-    double eps = 10e-10; // Added to diagonal to make matrix positive definite
-    
     vector<vector<T>> cov_s(M, vector<T>(M));
     vector<vector<T>> Cov_num(M, vector<T>(M));
     
