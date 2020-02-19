@@ -36,6 +36,9 @@ class blockList
     list_iter  marked_block;
     block_iter marked_space;
     
+    list_iter  marked_block2;
+    block_iter marked_space2;
+    
     // Add new array to list and update pointers
     void newBlock(){
         // Create new array at end of list
@@ -87,6 +90,18 @@ public:
     void rewindToMark(){
         cur_block = marked_block;
         next_space = marked_space;
+        last_space = cur_block->end();
+    }
+    // Save this point
+    void setMark2(){
+        marked_block2 = cur_block;
+        marked_space2 = next_space;
+    }
+    
+    // Rewind to marked point
+    void rewindToMark2(){
+        cur_block = marked_block2;
+        next_space = marked_space2;
         last_space = cur_block->end();
     }
     
@@ -246,6 +261,10 @@ public:
     iterator mark()
     {
         return iterator(marked_block, marked_space, marked_block->begin(), marked_block->end() );
+    }
+    iterator mark2()
+    {
+        return iterator(marked_block2, marked_space2, marked_block2->begin(), marked_block2->end() );
     }
     
     // Find element by searching from end to beginning

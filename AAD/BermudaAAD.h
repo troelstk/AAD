@@ -144,7 +144,6 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
                     myRNG.nextG(gauss);
                     //vec gauss_n = B_n * vec(gauss);
                     vec gauss_corr = B_n * vec(gauss);
-                    //vector<double> gauss_cov = simGauss( lower_d, gauss);
                     //print(gauss_n);
                     //print_DEBUG("Time is ", exTimes[t-1] + dt*(n+1));
                     for(int k = int_ExTime; k < int_Tb; ++k)
@@ -416,19 +415,22 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
     mat P; // U
     vec eigval; // D
     eig_sym(eigval, P, Cov);
-    //print(eigval);
+    print(eigval);
     //print(P);
     vec largest_n_eigvals = eigval.tail_rows(dim_n);
     mat H_n = diagmat(largest_n_eigvals);
     mat L_n = sqrt(H_n);
     mat P_n = P.tail_cols(dim_n);
     mat B_n = P_n * L_n;
+    
+    print("P_n is");
+    print(P_n);
     /*
     mat approxCov = B_n * B_n.t();
     print("B*Bt is ");
     print(approxCov);*/
     
-    vector<vector<T>> Pert =
+    /*vector<vector<T>> Pert_cov =
       {{T(1.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0) },
        {T(0.0), T(1.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0) },
        {T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(1.0), T(0.0) },
@@ -439,7 +441,20 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
        {T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(1.0), T(0.0), T(0.0), T(0.0) },
        {T(0.0), T(0.0), T(1.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0) },
        {T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(1.0), T(0.0), T(0.0) },
-       {T(0.0), T(0.0), T(0.0), T(0.0), T(1.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0) }};
+       {T(0.0), T(0.0), T(0.0), T(0.0), T(1.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0), T(0.0) }};*/
+    
+    vector<vector<T>> Pert =
+    {{T(1.0), T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0)},
+    {T(0.0), T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(1.0)},
+    {T(0.0), T(0.0),T(1.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0)},
+    {T(0.0), T(0.0),T(0.0),T(0.0),T(0.0),T(1.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0)},
+    {T(0.0), T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(1.0),T(0.0),T(0.0),T(0.0),T(0.0)},
+    {T(0.0), T(0.0),T(0.0),T(0.0),T(1.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0)},
+    {T(0.0), T(1.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0)},
+    {T(0.0), T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(1.0),T(0.0),T(0.0),T(0.0)},
+    {T(0.0), T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(1.0),T(0.0),T(0.0)},
+    {T(0.0), T(0.0),T(0.0),T(1.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0)},
+    {T(0.0), T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(1.0),T(0.0)}};
     
     vector<vector<T>> L_num(dim_n, vector<T>(dim_n, T(0.0)));
     vector<vector<T>> eig_num(dim_n, vector<T>(dim_n, T(0.0)));
@@ -485,28 +500,34 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
     print("Test if L*L^T from BBT yields cov_s ");
     print_val(BBT2);
     */
-    vector<vector<T>> A = MatMatProd(MatMatProd(transp(Pert), cov_s), Pert);
-    print("A= P^t*C*P");
-    print_val(A);
+    //vector<vector<T>> A = MatMatProd(MatMatProd(transp(Pert), cov_s), Pert);
+    
+    vector<vector<T>> A = cov_s;
+    //print("A= P^t*C*P");
+    //print_val(A);
     //print("eig vecs");
     //print(P_n);
 
     lower = Chol2(A, B_num);
 
-    print("Chol of A is ");
-    print_val(lower);
+    //print("Chol of A is ");
+    //print_val(lower);
     
-    /*vector<vector<T>> B_num_swap(M, vector<T>(dim_n, T(0.0)));
-    for(int i=0; i<M; ++i) {
-        B_num_swap[i][1] = B_num[i][0];
-        B_num_swap[i][0] = B_num[i][1];
-    }*/
-    
+
     for(int i = 0; i<M; i++){ // Rows
         for(int j = 0; j<dim_n; j++){ // cols
             lower_d[i][j] = double(lower[i][j]);
         }
     }
+    mat U1, U2;
+    mat V1;
+
+    mat U_L, V_L;
+    vec s_L;
+    svd(U_L,s_L,V_L,Cov);
+
+    U1 = U_L.head_cols(dim_n);
+    U2 = U_L.tail_cols(M-dim_n);
     
     vector<vector<T>> corr_vol(M1, vector<T>(M1));
     // Pre compute product, instead of doing it in inner most loop
@@ -556,8 +577,8 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
                 for(int n = 0; n<nSteps; ++n) {
                     myRNG.nextG(gauss);
                     //vec gauss_n = B_n * vec(gauss);
-                    vec gauss_corr = B_n * vec(gauss);
-                    //vector<double> gauss_cov = MatVecProd( lower_d, gauss);
+                    //vec gauss_corr = B_n * vec(gauss);
+                    vector<double> gauss_corr = MatVecProd( lower_d, gauss);
                     //print(gauss_cov);
                     //print_DEBUG("Time is ", exTimes[t-1] + dt*(n+1));
                     for(int k = int_ExTime; k < int_Tb; ++k)
@@ -567,10 +588,6 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
                             double Fj = exp(lnF[j]);
                             sum += double(corr_vol[k][j]) * Fj / (1.0 + double(tau) * Fj);
                         }
-                        // For cholesky and PCA of Cov
-                        //lnF[k] += double(vol[k][k])*double(tau)*sum*dt - double(vol[k][k])*double(vol[k][k])/2.0*dt + sqDt*gauss_cov[k-int_Ta];
-                        // For PCA of Cov
-                        //lnF[k] += double(vol[k][k])*double(tau)*sum*dt - double(vol[k][k])*double(vol[k][k])/2.0*dt + sqDt*gauss_n[k-int_Ta];
                         // For PCA of Corr
                         lnF[k] += double(vol[k][k])*double(tau)*sum*dt - double(vol[k][k])*double(vol[k][k])/2.0*dt + sqDt*double(vol[k][k])*gauss_corr[k-int_Ta];
                     } // rates
@@ -671,7 +688,7 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
             for(int n = 0; n<nSteps; ++n) {
                 myRNG.nextG(gauss);
                 //vector<T> gauss_n = MatVecProd( B_num, gauss);
-                vector<T> gauss_corr = MatVecProd( B_num, gauss);
+                vector<T> gauss_corr = MatVecProd(lower, gauss);
                 //vector<T> gauss_cov = MatVecProd(lower, gauss);
                 for(int k = int_ExTime; k < int_Tb; ++k)
                 {
@@ -704,56 +721,44 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
             eta *= EY2 > swap_val ? 1.0 : 0.0; // 1 if continue, 0 if exercise
             //print("Swap value ", swap_val.value());
         }
-        //print("Swap path is ", swap_path.value());
+        //print("lower");
+        //print_adj(lower);
         //Chol2Adj(cov_s, B_num, lower);
-        
-        /*for(int i = 0; i<M; i++){ // Rows
-            for(int j = 0; j<dim_n; j++){ // cols
-                lower[i][j].adjoint() = 0.0;
-            }
-        }
-        vector<vector<T>> lower_test = lower;
-        
-        for(int i = 0; i<M; i++){ // Rows
-            for(int j = 0; j<dim_n; j++){ // cols
-                lower_test[i][j].adjoint() = lower[i][j].adjoint()/double(i+1);
-            }
-        }*/
-        
-        
         swap_path.propagateToMark();
-        //Chol2Adj(cov_s, B_num, lower);
-
+        
+        //print("lower after ");
+        //print_adj(lower);
         end_result += swap_path;
-        //print("swap_path is ", double(swap_path));
+        //print("swap_path at path ", i, " is ", double(swap_path));
     }
     print_DEBUG("Main forward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");
     print("Simulation done ");
     
     print("lower");
     print_adj(lower);
-    print("cov_s");
-    print_adj(cov_s);
-    print("B_num");
-    print_adj(B_num);
     
-    //Chol2Adj(cov_s, B_num, lower);
-    print("Chol2Adj");
     
     print("lower");
     print_adj(lower);
-    print("cov_s");
-    print_adj(cov_s);
+    //print("cov_s");
+    //print_adj(cov_s);
+    //Chol2Adj(cov_s, B_num, lower); print("Chol2Adj");
     
-    vector<vector<T>> cov_test(M, vector<T>(M, T(0.0)));
+    number::propagateMarkToStart(); // Skal være her, da cov_s adjoints ellers er tomme, så cov_test og G ikke bliver udfyldt
+    print("PropagatedMarkToStart");
+    
+    
+    
+    vector<vector<T>> cov_adjs(M, vector<T>(M, T(0.0)));
     
     for(int i = 0; i<M; i++){ // Rows
         for(int j = 0; j<=i; j++){ // cols
-            cov_test[i][j] = cov_s[i][j].adjoint();
+            cov_adjs[i][j] = cov_s[i][j].adjoint(); // hjælper ikke at dele med double(nPaths)
         }
     }
-    
-    vector<vector<T>> G = MatMatProd(cov_test, transp(cov_test));
+    print("cov_adjs");
+    print_val(cov_adjs);
+    vector<vector<T>> G = MatMatAdd(cov_adjs, transp(cov_adjs));
     print("G");
     print_val(G);
     
@@ -761,69 +766,38 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
     
     for(int i = 0; i<Pert.size(); ++i){
         for(int j = 0; j<Pert[0].size(); ++j){
-            Pert_m(i,j) = double(Pert[i][j]);
+            //Pert_m(i,j) = double(Pert[i][j]);
+        }
+    }
+    for(int i = 0; i<G.size(); ++i){
+        for(int j = 0; j<G[0].size(); ++j){
             G_m(i,j) = double(G[i][j]);
         }
     }
     
-    mat U1;
-    mat V1;
+    //mat A_bar = 0.5 * (Pert_m.t()*G_m*Pert_m - ( eye(size(G_m)) - U1*U1.t() ) *
+    //                   Pert_m.t()*G_m*Pert_m * ( eye(size(G_m)) - U1*U1.t() ) ) ;
     
-    mat U_L, V_L;
-    vec s_L;
-    svd(U_L,s_L,V_L,Cov);
+    //mat A_bar = 0.5 * (G_m - ( U2*U2.t() * G_m * U2*U2.t() ) ) ;
     
-    U1 = U_L.head_cols(dim_n);
-    
-    mat A_bar = 0.5 * (Pert_m.t()*G_m*Pert_m - ( eye(size(G_m)) - U1*U1.t() ) *
-                       Pert_m.t()*G_m*Pert_m * ( eye(size(G_m)) - U1*U1.t() ) ) ;
-    
-    print(A_bar);
-    mat PAPt = Pert_m * A_bar * Pert_m.t();
-    print(PAPt );
+    //print("A_bar");
+    //print(A_bar);
+    //mat PAPt = Pert_m * A_bar * Pert_m.t();
+    /*print("PAPt");
+    print(PAPt );*/
     
     for(int i = 0; i<M; i++){ // Rows
         for(int j = 0; j<M; j++){ // cols
-            cov_s[i][j].adjoint() += PAPt(i,j);
+            //cov_s[i][j].adjoint() += PAPt(i,j); // Får hverken korrekte uden denne linje, med = eller med +=
         }
     }
     
-
-    
-    number::propagateMarkToStart();
-    print("PropagatedMarkToStart");
     
     print("lower");
     print_adj(lower);
-    print("cov_s");
-    print_adj(cov_s);
-
+    //print("corr");
+    //print_adj(corr);
     
-    //print("Corr pre prop");
-    //print_adj(corr);
-    for(int i = int_Ta; i<int_Tb; ++i){
-        for(int j = int_Ta; j<int_Tb; ++j){
-            int i2 = i-int_Ta;
-            int j2 = j-int_Ta;
-            
-            
-            //print_adj(cov_s[i2][j2]);
-            //print( prev(cov_s[i2][j2].getNode())->adjoint() );
-            // Propagate cov_s node
-            /*cov_s[i2][j2].getNode()->propagateOne();
-            
-            //print_adj(cov_s[i2][j2]);
-            //print( prev(cov_s[i2][j2].getNode())->adjoint() );
-            // Propagate previous node
-            auto prevNode = cov_s[i2][j2].getNode();
-            for(int k = 0; k<10; k++){
-                prevNode = prev(prevNode);
-                prevNode->propagateOne();
-            }*/
-        }
-    }
-    //print("Corr post prop");
-    //print_adj(corr);
     
     return end_result/double(nPaths) ;
 }

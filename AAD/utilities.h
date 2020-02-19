@@ -47,7 +47,7 @@ print(vector<vector<double>> & input_vec_of_vecs) {
 
 template<class T> inline void
 print_adj(T & elem) {
-    printf("%6.1f, ", elem.adjoint());
+    printf("%2.4f, ", elem.adjoint());
 }
 
 template<class T> inline void
@@ -136,7 +136,7 @@ T sum(vector<T>& input_vec) {
 
 // Mean of a vector
 template<class T>
-T mean(vector<T>& input_vec) {
+T mean(vector<T> input_vec) {
     return sum(input_vec)/double(input_vec.size());
 }
 

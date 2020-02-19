@@ -74,6 +74,17 @@ public:
         myArgPtrs.rewindToMark();
         myNodes.rewindToMark();
     }
+    void mark2(){
+        myDerivs.setMark2();
+        myArgPtrs.setMark2();
+        myNodes.setMark2();
+    }
+    
+    void rewindToMark2(){
+        myDerivs.rewindToMark2();
+        myArgPtrs.rewindToMark2();
+        myNodes.rewindToMark2();
+    }
     
     // iterators
     
@@ -90,6 +101,10 @@ public:
     auto markIt()
     {
         return myNodes.mark();
+    }
+    auto markIt2()
+    {
+        return myNodes.mark2();
     }
     auto find(node* Node)
     {

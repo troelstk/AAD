@@ -63,7 +63,7 @@ template<class T> T C_ab(vector<T> & forwards, double yearly_payments, int t, in
     return sum;
 }
 
-template<class T> T w(vector<T> & forwards, double yearly_payments, T inp_i, int start_idx){
+template<class T> T w(vector<T> & forwards, double yearly_payments, T inp_i, int start_idx, int end_idx){
     T sum(0.0);
     
     T top_prod(1.0);
@@ -72,7 +72,7 @@ template<class T> T w(vector<T> & forwards, double yearly_payments, T inp_i, int
     }
 
     T bot_prod(1.0);
-    for(int k = start_idx; k<forwards.size(); ++k ) {
+    for(int k = start_idx; k<end_idx; ++k ) {
         bot_prod = 1.0;
         for(int j = start_idx; j<k+1; ++j ) {
            bot_prod *= DF_from_F(forwards[j], yearly_payments);
@@ -83,14 +83,15 @@ template<class T> T w(vector<T> & forwards, double yearly_payments, T inp_i, int
 }
 
 template<class T> T vol_TFM(vector<T> & forwards, double yearly_payments, T Ta,
-                            vector<vector<T>> & corr, vector<vector<T>> & vol, T swap_rate, int start_idx){
+                            vector<vector<T>> & corr, vector<vector<T>> & vol, T swap_rate, int start_idx, int end_idx){
     // Rebonatos formula, 6.67 in Brigo. Works for time independent vol only, as specification in Table 3
     T res(0.0);
     
-    for(int i = start_idx; i<forwards.size(); ++i){ // F10,...,F19
-        for(int j = start_idx; j<forwards.size(); ++j){
-            res += w(forwards, yearly_payments, double(i), start_idx ) * w(forwards, yearly_payments, double(j), start_idx ) *
-                    forwards[i] * forwards[j] * corr[i][j] / swap_rate / swap_rate * Ta * vol[i][i] * vol[j][j];
+    for(int i = start_idx; i<end_idx; ++i){ // F10,...,F19
+        for(int j = start_idx; j<end_idx; ++j){
+            res += w(forwards, yearly_payments, double(i), start_idx, end_idx )
+                 * w(forwards, yearly_payments, double(j), start_idx, end_idx )
+            * forwards[i] * forwards[j] * corr[i][j] / swap_rate / swap_rate * Ta * vol[i][i] * vol[j][j];
         }
     }
     return res;

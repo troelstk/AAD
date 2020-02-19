@@ -28,10 +28,9 @@ template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & co
     T sqDt = sqrt(dt);
     T res(0.0);
     int int_t = (int)(t), int_Ta = (int)(Ta), int_Tb = (int)(Tb);
-    size_t M1 = initF.size();
+    size_t M1 = vol[0].size();
+    //size_t M = int_Tb-int_Ta;
     
-    vec means(M1, fill::zeros);
-    //mat C(M1, M1, fill::zeros);
     mat C(M1, M1, fill::zeros);
     
     // Fill covariance matrix
@@ -43,8 +42,9 @@ template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & co
         }
     }
 
-    //mat Cs = C( span(int_Ta,M1-1), span(int_Ta,M1-1) ); // Select subset of full covariance matrix to simulate from
+    // Select subset of full covariance matrix to simulate from
     mat corr2 = C( span(int_Ta,M1-1), span(int_Ta,M1-1) );
+    //mat corr2 = C;
     // Find eigenvalues and vectors of correlation matrix
     mat P;
     vec eigval;
@@ -103,9 +103,9 @@ template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & co
 
         res += C_ab( F, yearly_payments, int_Ta, int_Ta, int_Tb) * max(floating_swap_rate - r_fix, 0.0);
     }
-    //print("mean is ", mean(lnRates));
-    //print("kurtosis is ", kurtosis(lnRates));
-    //print("skew is ", skew(lnRates));
+    print("mean is ", mean(exp(lnRates)));
+    print("kurtosis is ", kurtosis(lnRates));
+    print("skew is ", skew(lnRates));
     
     // Discounting back to time t:
     T disc;

@@ -100,7 +100,6 @@ using namespace std;
                 for(int n = 0; n<nSteps; ++n) {
                     myRNG.nextG(gauss);
                     vec gauss_n = B_n * vec(gauss);
-                    //vector<double> gauss_corr = simGauss( lower_d, gauss);
 
                     //print_DEBUG("Time is ", exTimes[t-1] + dt*(n+1));
                     for(int k = int_ExTime; k < int_Tb; ++k)
@@ -207,7 +206,6 @@ using namespace std;
             for(int n = 0; n<nSteps; ++n) {
                 myRNG.nextG(gauss);
                 vec gauss_n = B_n * vec(gauss);
-                //vector<T> gauss_corr = simGauss( lower, gauss);
                 for(int k = int_ExTime; k < int_Tb; ++k)
                 {
                     T sum(0.0);
@@ -303,7 +301,21 @@ template<class T> T LMM_BermudaSwaption2(vector<vector<T>> & vol, vector<vector<
     }
 
     B_num = MatMatProd(P_num, L_num);
-    
+    vector<vector<T>> Pert =
+    {{T(1.0), T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0)},
+    {T(0.0), T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(1.0)},
+    {T(0.0), T(0.0),T(1.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0)},
+    {T(0.0), T(0.0),T(0.0),T(0.0),T(0.0),T(1.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0)},
+    {T(0.0), T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(1.0),T(0.0),T(0.0),T(0.0),T(0.0)},
+    {T(0.0), T(0.0),T(0.0),T(0.0),T(1.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0)},
+    {T(0.0), T(1.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0)},
+    {T(0.0), T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(1.0),T(0.0),T(0.0),T(0.0)},
+    {T(0.0), T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(1.0),T(0.0),T(0.0)},
+    {T(0.0), T(0.0),T(0.0),T(1.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0)},
+    {T(0.0), T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(0.0),T(1.0),T(0.0)}};
+    //vector<vector<T>> A = MatMatProd(MatMatProd(transp(Pert), cov_s), Pert);
+    vector<vector<T>> A = cov_s;
+    lower = Chol2(A, B_num);
    
     
     // Pre compute product, instead of doing it in inner most loop
@@ -346,7 +358,8 @@ template<class T> T LMM_BermudaSwaption2(vector<vector<T>> & vol, vector<vector<
                 
                 for(int n = 0; n<nSteps; ++n) {
                     myRNG.nextG(gauss);
-                    vec gauss_n = B_n * vec(gauss);
+                    //vec gauss_n = B_n * vec(gauss);
+                    vector<double> gauss_corr = MatVecProd( lower, gauss);
                     //print_DEBUG("Time is ", exTimes[t-1] + dt*(n+1));
                     for(int k = int_ExTime; k < int_Tb; ++k)
                     {
@@ -355,8 +368,8 @@ template<class T> T LMM_BermudaSwaption2(vector<vector<T>> & vol, vector<vector<
                             double Fj = exp(lnF[j]);
                             sum += corr_vol[k][j] * Fj / (1.0 + tau * Fj);
                         }
-                        //lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*gauss_n[k-int_Ta];
-                        lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*vol[k][k]*gauss_n[k-int_Ta];
+                        lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*vol[k][k]*gauss_corr[k-int_Ta];
+                        //lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*vol[k][k]*gauss_n[k-int_Ta];
                     } // rates
                 } // steps
                 // Now have F_k(T_alpha) for k=10,..,M
@@ -454,7 +467,8 @@ template<class T> T LMM_BermudaSwaption2(vector<vector<T>> & vol, vector<vector<
             vector<T> lnF = log(initF);
             for(int n = 0; n<nSteps; ++n) {
                 myRNG.nextG(gauss);
-                vector<T> gauss_corr = MatVecProd( B_num, gauss);
+                //vector<T> gauss_corr = MatVecProd( B_num, gauss);
+                vector<T> gauss_corr = MatVecProd( lower, gauss);
                 for(int k = int_ExTime; k < int_Tb; ++k)
                 {
                     T sum(0.0);

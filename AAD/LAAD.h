@@ -43,7 +43,15 @@ public:
     
     explicit operator T& (int i, int j)
     {
-        return data[i][j];
+        if(i > n_rows ) {
+            throw "Row index out of bounds";
+        }
+        else if (j > n_cols ) {
+            throw "Column index out of bounds";
+        }
+        else {
+            return data[i][j];
+        }
     };
     
 }
