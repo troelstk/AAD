@@ -120,14 +120,18 @@ int main(int argc, const char * argv[]) {
     Ta = 9; // Start of swap
     Tb = 20; // End of swap
     
-    /*int first_ex = Ta; // First time swap can be exercised
+    //vector<double> exTimes20   = {0.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0};
+    //vector<double> exTimes20   = {0.0, 9.0};
+    
+    int first_ex = Ta; // First time swap can be exercised
     int last_ex = Tb-1; // Last time swap can be exercised
 
     vector<double> exTimes20(last_ex-first_ex+2, 0.0);
     for(int i = 1; i< last_ex-first_ex+2; ++i){
         exTimes20[i] = double(i+first_ex-1);
     }
-    print(exTimes20);*/
+    print(exTimes20);
+    
     
     int_Ta = int(Ta); int_Tb = int(Tb); int_t = int(t);
     
@@ -139,7 +143,7 @@ int main(int argc, const char * argv[]) {
     for(int i = 0; i<Tb; ++i){
         F20[i] = 1.0/70.0*pow(i,0.05)+0.0469;
     }
-    //print(F20);*/
+    print(F20);*/
     
     
     M = int_Tb;
@@ -160,21 +164,16 @@ int main(int argc, const char * argv[]) {
 
     // Fill Vol and corr
     for(int i = 1; i<M; i++){
-        vol20[i][i] = Phi[i] ;
         for(int j = 1; j<M; j++){
             corrA[i][j] = cos( Theta[i-1] - Theta[j-1]) ;
             //corrA[i][j] = 1.0;
             //corrA[i][j] = 1.0/(double((abs(j-i)*abs(i-j)+8.0*Tb))/(8*Tb));
-            //vol20[i][i] = 0.045*pow(i,0.2)*exp(-i*0.025) + 0.095 ;
         }
+        vol20[i][i] = Phi[i] ;
+        //vol20[i][i] = 0.045*pow(i,0.2)*exp(-i*0.025) + 0.095 ;
         //print(vol20[i][i]);
     }
     //print(corrA);
-    /*vector<double> F_small(Tb-Ta); //M
-    for(int i = 0; i<Tb-Ta; ++i){
-        F_small[i] = F20[i+int_Ta];
-     }
-    print(F_small);*/
     
     double rebonato2 = sqrt(vol_TFM(F20, yearly_payments, Ta, corrA, vol20, swap_rate20, int(Ta) + 1, int_Tb) );
     print("Rebonato vol is ", rebonato2/sqrt(Ta));
@@ -182,12 +181,10 @@ int main(int argc, const char * argv[]) {
     print("C is ", C);
     double black20 = BlackCall( swap_rate20, swap_rate20, rebonato2);
     print("Black price ", C * notional * black20 );
-    //double BlackImpVol3 = BlackiVol(swap_rate20, swap_rate20, black20 );
-    //print("Black20 implied vol is ", BlackImpVol3/sqrt(Ta) );
     
     
     nSteps = 36;
-    nPaths = 100000;
+    nPaths = 10000;
     seed1 = 3;
     
     double lmm20 = -1;
@@ -202,7 +199,7 @@ int main(int argc, const char * argv[]) {
     
     
     print("\nBermuda test: ");
-    nPaths_presim = 2;
+    nPaths_presim = 1000;
     nPaths = 10000; // Main
     
     nSteps_y = 4;
@@ -210,15 +207,7 @@ int main(int argc, const char * argv[]) {
     seed2 = 295;
     print("Seed1: ", seed1, ", seed2: ", seed2, ", Main paths: ", nPaths, " yearly steps: ", nSteps_y);
     
-    //vector<double> exTimes20   = {0.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0};
-    vector<double> exTimes20   = {0.0, 9.0};
-    /*vector<double> exTimes20(Tb-Ta);
-    for(int i=0; i<Tb-Ta; ++i){
-        exTimes20[i] = double(Ta + i);
-    }*/
-    
 
-    
     
     print("\nAAD test:");
     vector<number> F_Risk, thetaRisk, PhiRisk;
@@ -241,6 +230,7 @@ int main(int argc, const char * argv[]) {
             //print("row ", i, " col ", j, " ", corrRisk[i][j].value());
         }
         //volRisk[i][i] = number(0.045*pow(i,0.2)*exp(-i*0.025) + 0.095 );
+        volRisk[i][i] = PhiRisk[i];
     }
     //print("other side");
     for(int i = 1; i<M; i++){
@@ -248,10 +238,6 @@ int main(int argc, const char * argv[]) {
             corrRisk[j][i] = corrRisk[i][j];
             //print("row ", j, " col ", i, " ", corrRisk[i][j].value());
         }
-    }
-    
-    for(int i = 1; i<M; i++){
-        volRisk[i][i] = PhiRisk[i];
     }
     number fixedRateRisk(r_fix);
     
@@ -270,7 +256,7 @@ int main(int argc, const char * argv[]) {
     //for(auto & x : volRisk[1]){print("Vol risk is ", x.adjoint()/double(nPaths)) ;}
     //double FR_AAD = fixedRateRisk.adjoint()/double(nPaths);
     
-    double eps = 0.00000001;
+    double eps = 10e-12;
     
     /* Print all F adjoints */
     print("F adjoints");
@@ -289,7 +275,7 @@ int main(int argc, const char * argv[]) {
     cout << "\n";
        
     /* Print all correlation adjoints */
-    print("Correlation Adjoints");
+    /*print("Correlation Adjoints");
     for(int i=9; i<Tb; ++i) { // i<Tb
         printf("%1.0d & ", i);
         for(int j=9; j<Tb; ++j) { // j<i+1
@@ -302,7 +288,7 @@ int main(int argc, const char * argv[]) {
            }
        }
        cout << "\n";
-    }
+    }*/
     
     //number::tape->clear();
     
@@ -316,7 +302,7 @@ int main(int argc, const char * argv[]) {
     print("AAD: ", float(timeAADBermuda) / float(timeBSwap3), " times slower");
     
     /* Compare forward rate adjoints with bump-and-revalue */
-    print("Compare forward rate adjoints with bump-and-revalue");
+    /*print("Compare forward rate adjoints with bump-and-revalue");
     for(int idx=0; idx<Tb; ++idx) {
         // Bump one at the time and compute FD approx:
         F20[idx] += eps;
@@ -330,10 +316,10 @@ int main(int argc, const char * argv[]) {
         printf("%2.1d: %11.10f,%11.10f,%11.10f\n", idx, AAD_approx, FD_approx, AAD_approx/FD_approx);
         //print(float( clock() - begin_timeBswap2 )/ CLOCKS_PER_SEC);
     }
-    cout << "\n";
+    cout << "\n";*/
     
     /* Compare vol adjoints with bump-and-revalue */
-    print("Compare vol adjoints with bump-and-revalue");
+    /*print("Compare vol adjoints with bump-and-revalue");
     for(int idx=9; idx<Tb; ++idx) {
         // Bump one at the time and compute FD approx:
         vol20[idx][idx] += eps;
@@ -346,12 +332,12 @@ int main(int argc, const char * argv[]) {
         printf("%2.1d: %11.10f,%11.10f,%11.10f\n", idx, AAD_approx, FD_approx, AAD_approx/FD_approx);
         //print(float( clock() - begin_timeBswap2 )/ CLOCKS_PER_SEC);
     }
-    cout << "\n";
+    cout << "\n";*/
     
     /* Compare correlation adjoints with bump-and-revalue */
     print("Compare correlation adjoints with bump and revalue");
     for(int i=9; i<int_Tb; ++i) { // i<Tb
-        for(int j=9; j<i; ++j) { // j<i+1
+        for(int j=9; j<int_Tb; ++j) { // j<i+1
         // Bump one at the time and compute FD approx:
             if(i != j) {
                 corrA[i][j] += eps;
@@ -364,9 +350,12 @@ int main(int argc, const char * argv[]) {
                 
                 double AAD_approx = corrRisk[i][j].adjoint()/double(nPaths);
                 printf("%2.1d, %2.1d: %11.10f,%11.10f,%11.10f\n", i, j, AAD_approx, FD_approx, AAD_approx/FD_approx);
-                //printf("%1.2f %% & ", (AAD_approx-FD_approx )/ AAD_approx*100 );
+                //printf("%1.4f & ", AAD_approx/ FD_approx );
                 //print(float( clock() - begin_timeBswap2 )/ CLOCKS_PER_SEC);
-            } 
+            }
+            else {
+                //printf("%1.4f, ", - );
+            }
         }
         cout << "\n";
     }

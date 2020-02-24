@@ -415,16 +415,17 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
     mat P; // U
     vec eigval; // D
     eig_sym(eigval, P, Cov);
-    print(eigval);
+    //print(eigval);
     //print(P);
     vec largest_n_eigvals = eigval.tail_rows(dim_n);
+    print(eigval.tail_rows(6));
     mat H_n = diagmat(largest_n_eigvals);
     mat L_n = sqrt(H_n);
     mat P_n = P.tail_cols(dim_n);
     mat B_n = P_n * L_n;
     
-    print("P_n is");
-    print(P_n);
+    //print("P_n is");
+    //print(P_n);
     /*
     mat approxCov = B_n * B_n.t();
     print("B*Bt is ");
@@ -653,6 +654,12 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
             }
             
             beta.col(t) = V * D.t() * Sig * U.t() * vec(ITMY) ;
+            mat EY = X*beta.col(t);
+            for(int i = 0; i<indices.size(); ++i){
+                if(swap_vals[indices[i]][t] > EY(i) ) { // If ITM
+                    payoff(i) = swap_vals[indices[i]][t];
+                };
+            }
         } // Backward loop
     } // Scope
     print_DEBUG("Presim backward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");
@@ -671,13 +678,15 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
     mrg32k3a myRNG(seed2, seed1);
     myRNG.init(dim_n);
     vector<double> gauss(dim_n);
-    //myRNG.init(M);
-    //vector<double> gauss(M);
+
+    vector<int> count_ex = vector<int>(exTimes.size(), 0);
+    vector<double> ex_boundary = vector<double>(exTimes.size(), 100);
+    
     
     number::tape->mark();
     for(int i = 0; i<nPaths; ++i){
         number::tape->rewindToMark();
-        double eta = 1.0;
+        int eta = 1;
         T swap_path(0.0);
         for(int t = 1; t<exTimes.size(); ++t ){
             //print("exTime is ", exTimes[t], " t is ", t);
@@ -713,14 +722,21 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
                 C_ab( F, yearly_payments, int_ExTime, int_ExTime, int_Tb) *
                 max(floating_swap_rate - r_fix, 0.0);
 
-            swap_path += eta * swap_val;
+            swap_path += double(eta) * swap_val;
             
             double EY2 = t < exTimes.size() - 1 ?
                 // continuation value - at last ex time the eta value computed below will never be used (so 0.0 could be anything), just avoid beta of last t
                 as_scalar(vec( { 1.0, double(floating_swap_rate), double(F[ int_ExTime ]) }).t() * beta.col(t)) : 0.0;
-            eta *= EY2 > swap_val ? 1.0 : 0.0; // 1 if continue, 0 if exercise
+            //print("EY2 ", EY2, " swap val ", double(swap_val), " eta ", eta );
+            if( EY2 < swap_val && eta == 1) { // Exercise at time t, cont at time t-1
+                count_ex[t] += 1;
+                ex_boundary[t] = min(ex_boundary[t], double(swap_val));
+            }
+            eta *= EY2 > swap_val ? 1 : 0; // 1 if continue, 0 if exercise
             //print("Swap value ", swap_val.value());
+            //cout << eta << " ";
         }
+        //print("path val", double(swap_path));
         //print("lower");
         //print_adj(lower);
         //Chol2Adj(cov_s, B_num, lower);
@@ -733,13 +749,24 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
     }
     print_DEBUG("Main forward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");
     print("Simulation done ");
+    for(auto & x: count_ex){
+        cout << x << " ";
+    }
+    cout << "\n";
+    print("sum ", sum(count_ex));
+    for(auto & x: ex_boundary){
+        cout << x << " ";
+    }
+    cout << "\n";
+    /*print(count_ex);
+    print(ex_boundary);*/
     
     print("lower");
-    print_adj(lower);
+    //print_adj(lower);
     
     
     print("lower");
-    print_adj(lower);
+    //print_adj(lower);
     //print("cov_s");
     //print_adj(cov_s);
     //Chol2Adj(cov_s, B_num, lower); print("Chol2Adj");
@@ -757,10 +784,10 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
         }
     }
     print("cov_adjs");
-    print_val(cov_adjs);
+    //print_val(cov_adjs);
     vector<vector<T>> G = MatMatAdd(cov_adjs, transp(cov_adjs));
     print("G");
-    print_val(G);
+    //print_val(G);
     
     mat Pert_m(Pert.size(), Pert[0].size()), G_m(G.size(), G[0].size()) ;
     
@@ -794,7 +821,7 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
     
     
     print("lower");
-    print_adj(lower);
+    //print_adj(lower);
     //print("corr");
     //print_adj(corr);
     

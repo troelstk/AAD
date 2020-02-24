@@ -434,6 +434,12 @@ template<class T> T LMM_BermudaSwaption2(vector<vector<T>> & vol, vector<vector<
             }
             
             beta.col(t) = V * D.t() * Sig * U.t() * vec(ITMY) ;
+            mat EY = X*beta.col(t);
+            for(int i = 0; i<indices.size(); ++i){
+                if(swap_vals[indices[i]][t] > EY(i) ) { // If ITM
+                    payoff(i) = swap_vals[indices[i]][t];
+                };
+            }
         } // Backward loop
     } // Scope
     
