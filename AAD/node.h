@@ -56,16 +56,6 @@ public:
         }
     }
     
-    void propagateSpecialOne()
-    {
-        cout << myN() <<  endl;
-        // Return if zero childs (nothing to propagate) or mAdjoint is 0 (no need to propagate as all terms added are just 0)
-        if ( !n || !mAdjoint) return;
-        
-        for(size_t i = 0; i < n; ++i ) {
-            *(pAdjPtrs[i]) += pDerivatives[i] * mAdjoint;
-        }
-    }
 };
 
 

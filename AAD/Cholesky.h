@@ -14,7 +14,7 @@
   
 /* Computes the lower triangular Cholesky decomposition of input matrix A. Source: https://www.geeksforgeeks.org/cholesky-decomposition-matrix-decomposition/ */
 template<class T>
-vector<vector<T>> Chol( vector<vector<T>> & A)
+vector<vector<T>> CholStandard( vector<vector<T>> & A)
 {
     size_t n = A[0].size();
     vector<vector<T>> L(n, vector<T>(n, T(0.0)));
@@ -41,7 +41,7 @@ vector<vector<T>> Chol( vector<vector<T>> & A)
 }
 
 template<class T>
-vector<vector<T>> Chol2( vector<vector<T>> & C, vector<vector<T>> & B)
+vector<vector<T>> CholMod( vector<vector<T>> & C, vector<vector<T>> & B)
 {
     
     int n = int(C.size()); // rows
@@ -71,6 +71,7 @@ vector<vector<T>> Chol2( vector<vector<T>> & C, vector<vector<T>> & B)
     return L;
 }
 
+// Not-working attempt at differentiating Cholesky decomposition
 template<class T>
 void Chol2Adj( vector<vector<T>> & C,
                vector<vector<T>> & B,
@@ -80,20 +81,9 @@ void Chol2Adj( vector<vector<T>> & C,
     assert(B[0].size() == L[0].size());
     int n = int(C.size()); // rows of C == cols of C == rows of B
     int m = int(B[0].size()); // cols of B (dim_n == rank of cov)
-    
-    //vector<vector<T>> L(n, vector<T>(m, T(0.0)));
-    
-    for(int i=0; i<n; ++i) {
-        for(int j=0; j<m; ++j){
-            //L[i][j] = L2[i][j];
-        }
-    }
-    
-    //print("n x m ", n, "x", m);
-    
+
     for(int i=m-1; i>=0; --i) {
         for(int j=n-1; j>=i; --j){
-            print("pre C[",i, "][",j,"] adj ", C[i][j].adjoint(), " L adj ", L[i][i].adjoint(), " L val ", double(L[i][i]) );
             if(j==i) {
                 
                 C[i][i].adjoint() = 0.5 * L[i][i].adjoint() / double(L[i][i]);
@@ -102,13 +92,10 @@ void Chol2Adj( vector<vector<T>> & C,
                 C[i][j].adjoint() = L[j][i].adjoint() / double(L[i][i]);
                 L[i][i].adjoint() -= L[j][i].adjoint() * double(L[j][i]) / double(L[i][i]);
             }
-            print("post C[",i, "][",j,"] adj ", C[i][j].adjoint(), " L adj ", L[j][i].adjoint(), " L val ", double(L[i][i]) );
-            
+
             for(int k=0; k<i; ++k){
                 L[i][k].adjoint() -= C[i][j].adjoint() * double(L[j][k]);
-                //print(L[i][k].adjoint());
                 L[j][k].adjoint() -= C[i][j].adjoint() * double(L[i][k]);
-                //print(L[j][k].adjoint());
             }
             for(int k = m-1; k>=0; --k){
                 B[i][k].adjoint() += C[i][j].adjoint() * double(B[j][k]);

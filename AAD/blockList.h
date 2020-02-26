@@ -3,7 +3,6 @@
 //  AAD
 //
 //  Created by Troels Tang Karlsen on 02/09/2019.
-//  Copyright © 2019 Troels Tang Karlsen. All rights reserved.
 //
 
 #ifndef blocklist_h

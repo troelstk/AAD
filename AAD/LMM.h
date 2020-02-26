@@ -17,6 +17,7 @@
 
 using namespace std;
 
+// European swaption pricing
 template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & corr,
                              vector<T> & initF,
                              T t, T Ta, T Tb, T r_fix, T notional,
@@ -113,6 +114,7 @@ template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & co
     return disc * res/double(nPaths) * notional;
 }
 
+// European swaption pricing and AAD sensitivities
 template<class T> T LMM_swaptionAAD(vector<vector<T>> & vol, vector<vector<T>> & corr,
                              vector<T> & initF,
                              double t, double Ta, double Tb, T r_fix, double notional,

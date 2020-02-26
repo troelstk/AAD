@@ -27,7 +27,7 @@ class number {
     
     double myValue;
     
-    //// Access to Derivatives and adjoints of this numbers node
+    // Access to Derivatives and adjoints of this numbers node
     // For unary functions
     double& derivative() {
         return myNode->pDerivatives[0];

@@ -7,19 +7,12 @@
 //
 
 
-//#include "/usr/local/Cellar/armadillo/9.700.2/include/armadillo"
-
-
-//using namespace arma;
-
 #include <iostream>
 #include <vector>
 #include <ctime>
 
 #include "AAD.h"
-//#include "Heston.h"
 #include "lsm.h"
-//#include "vasicek.h"
 #include "swap.h"
 #include "LMM.h"
 #include "utilities.h"
@@ -31,9 +24,7 @@ using namespace std;
 
 
 int main(int argc, const char * argv[]) {
-   
-    //test_heston();
-    //test_vasicek();
+
     double t , notional, Ta, Tb, yearly_payments,  r_fix;
     int seed1, nSteps, nPaths, nPaths_presim, M, dim_n, seed2, nSteps_y;
 
@@ -45,72 +36,6 @@ int main(int argc, const char * argv[]) {
     Ta = 1.0; // Payment at time 2, 3 and 4
     Tb = 4.0;
     int int_Ta = int(Ta), int_Tb = int(Tb), int_t = int(t);
-    /*
-    yearly_payments = 1.0;
-    notional = 100.0;
-    
-    M = 4; // Dimension of forward curve
-    vector<vector<double>> vol(M,  vector<double>(M));
-    vector<vector<double>> corr(M, vector<double>(M));
-    vector<double> F = {0.01, 0.02, 0.03, 0.04}; // F_1, F_2, F_3, F_4
-    double swap_rate = SR_from_F(F, yearly_payments, int_Ta, int_Tb);
-    print( "Swap rate is ", swap_rate );
-    r_fix = swap_rate;
-    //vector<double> r_fix_vec = {0.05, 0.01, 0.02, swap_rate, 0.035, 0.04, 0.045};
-    
-    // Table 3: Constant vol for each F regardless of time t
-    vol[0] = {0.20, 0.00, 0.00, 0.00};
-    vol[1] = {0.25, 0.25, 0.00, 0.00};
-    vol[2] = {0.30, 0.30, 0.30, 0.00};
-    vol[3] = {0.30, 0.30, 0.30, 0.30};
-    // Burde bruge table 5 med time dependent vol
-    
-    corr[0] = {1.0, 0.8, 0.7, 0.6};
-    corr[1] = {0.8, 1.0, 0.8, 0.7};
-    corr[2] = {0.7, 0.8, 1.0, 0.8};
-    corr[3] = {0.6, 0.7, 0.8, 1.0};
-    // Bør lave mere sofistikeret corr
-    
-    clock_t begin_time = clock();
-    
-    double lmm = LMM_swaption(vol, corr, F, t, Ta, Tb, r_fix, notional, seed1, nPaths, nSteps, yearly_payments, dim_n);
-    auto time =  float( clock () - begin_time )/ CLOCKS_PER_SEC;
-    print("LMM Swaption price is ", lmm);
-    print("Calculation time: ", time, " seconds");
-
-    
-    double sum = 0.0;
-    for(int i = int(Ta); i<int(Tb); ++i){
-        double weight = w(F, yearly_payments, double(i), int(Ta));
-        //print("weight is ", weight);
-        sum += weight * F[i];
-    }
-    print("swap rate from weights is ", sum);
-    
-    double rebonato = sqrt(vol_TFM(F, yearly_payments, Ta, corr, vol, swap_rate, Ta) );
-    print("Rebonato vol is ", rebonato);
-    
-    double Cab = C_ab( F, yearly_payments, int_t, int_Ta, int_Tb);
-    //print("Cab is ", Cab);
-    // Black(T K, T F0, T vol)
-    double black = Cab * BlackCall( r_fix, swap_rate, rebonato);
-    
-    double disc = DF_from_F(F[0], Ta);
-    
-    print("Black price ", disc * black * notional);
-    
-    vector<double> exTimes = {0.0, 1.0, 2.0, 3.0};  // , 2.0, 3.0
-    
-    
-    
-    clock_t begin_timeBswap = clock();*/
-    
-   
-
-    
-    
-    
-    
     
     // Test case as in 8.2 in Brigo
     
@@ -119,7 +44,6 @@ int main(int argc, const char * argv[]) {
     Ta = 9; // Start of swap
     Tb = 20; // End of swap
     
-    //vector<double> exTimes20   = {0.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0};
     //vector<double> exTimes20   = {0.0, 9.0};
     
     int first_ex = Ta; // First time swap can be exercised
@@ -173,7 +97,6 @@ int main(int argc, const char * argv[]) {
         //vol20[i][i] = 0.2 ;
         //vol20[i][i] = 0.045*pow(i,0.2)*exp(-i*0.025) + 0.095 ;
     }
-    //print(corrA);
     
     double rebonato2 = sqrt(vol_TFM(F20, yearly_payments, Ta, corrA, vol20, swap_rate20, int(Ta) + 1, int_Tb) );
     print("Rebonato vol is ", rebonato2/sqrt(Ta));
@@ -226,7 +149,6 @@ int main(int argc, const char * argv[]) {
             corrRisk[i][j] = cos( thetaRisk[i-1] - thetaRisk[j-1]);
             //corrRisk[i][j] = number(1.0/(double((abs(j-i)*abs(i-j)+8.0*Tb))/(8*Tb)));
             //corrRisk[i][j] = 1.0;
-            //print("row ", i, " col ", j, " ", corrRisk[i][j].value());
         }
         //volRisk[i][i] = number(0.045*pow(i,0.2)*exp(-i*0.025) + 0.095 );
         volRisk[i][i] = PhiRisk[i];
@@ -236,7 +158,6 @@ int main(int argc, const char * argv[]) {
     for(int i = 1; i<M; i++){
         for(int j = 1; j<i; j++){
             corrRisk[j][i] = corrRisk[i][j];
-            //print("row ", j, " col ", i, " ", corrRisk[i][j].value());
         }
     }
     number fixedRateRisk(r_fix);
@@ -248,8 +169,8 @@ int main(int argc, const char * argv[]) {
     clock_t bermAADstart = clock();
 
     number bermudanAAD;
-    //bermudanAAD = LMM_BermudaSwaptionAAD(volRisk, corrRisk, F_Risk, exTimes20, t, Ta, Tb, fixedRateRisk, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
-    bermudanAAD = LMM_BermudaSwaptionAADChol(volRisk, corrRisk, F_Risk, exTimes20, t, Ta, Tb, fixedRateRisk, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
+
+    bermudanAAD = LMM_BermudaSwaptionAAD(volRisk, corrRisk, F_Risk, exTimes20, t, Ta, Tb, fixedRateRisk, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
     auto timeAADBermuda = float( clock() - bermAADstart )/ float( CLOCKS_PER_SEC);
     print("Bermudan value AAD: ", bermudanAAD.value(), " in ", timeAADBermuda, " seconds");
     
@@ -295,7 +216,7 @@ int main(int argc, const char * argv[]) {
     // Compute unbumped value:
     clock_t begin_timeBswap2 = clock();
 
-    double bermudan_unbumped = LMM_BermudaSwaption2(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
+    double bermudan_unbumped = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
     auto timeBSwap3 =  float( clock() - begin_timeBswap2 )/ CLOCKS_PER_SEC;
     print("Bermudan value non-AAD: ", bermudan_unbumped, " in ", timeBSwap3, " seconds");
 
@@ -306,7 +227,7 @@ int main(int argc, const char * argv[]) {
     for(int idx=0; idx<Tb; ++idx) {
         // Bump one at the time and compute FD approx:
         F20[idx] += eps;
-        double bermudan_bumped = LMM_BermudaSwaption2(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
+        double bermudan_bumped = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
         F20[idx] -= eps;
         double FD_approx = (bermudan_bumped - bermudan_unbumped)/eps;
         
@@ -323,7 +244,7 @@ int main(int argc, const char * argv[]) {
     for(int idx=9; idx<Tb; ++idx) {
         // Bump one at the time and compute FD approx:
         vol20[idx][idx] += eps;
-        double bermudan_bumped = LMM_BermudaSwaption2(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
+        double bermudan_bumped = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
         vol20[idx][idx] -= eps;
         double FD_approx = (bermudan_bumped - bermudan_unbumped)/eps;
         
@@ -342,7 +263,7 @@ int main(int argc, const char * argv[]) {
             if(i != j) {
                 corrA[i][j] += eps;
                 corrA[j][i] += eps;
-                double bermudan_bumped = LMM_BermudaSwaption2(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
+                double bermudan_bumped = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, nPaths, nPaths_presim, nSteps_y, yearly_payments, dim_n);
                 corrA[i][j] -= eps;
                 corrA[j][i] -= eps;
                 
@@ -366,61 +287,6 @@ int main(int argc, const char * argv[]) {
     
 
     
-    /*print("\nAAD test European:");
-    nPaths = 10000;
-    clock_t eurAADstart = clock();
-    number EUR_AAD = LMM_swaptionAAD(volRisk, corrRisk, F_Risk,
-                                     t, Ta, Tb, fixedRateRisk, notional,
-                                     seed1, nPaths, nSteps, yearly_payments, dim_n) ;
-    print( "EUR AAD took ",  float( clock() - eurAADstart )/ CLOCKS_PER_SEC);
-    print("European value AAD: ", EUR_AAD.value());
-    print("Vol adjoint is ", volRisk[vol_idx][vol_idx].adjoint()/double(nPaths),
-          " val is ", volRisk[vol_idx][vol_idx].value());
-    print("Fixed rate adjoint is ", fixedRateRisk.adjoint()/double(nPaths) );
-    
-    
-    eps = 0.000001;
-    double lmm1, lmm2;
-    vol20[vol_idx][vol_idx] += eps;
-    lmm1 = LMM_swaption(vol20, corrA, F20, t, Ta, Tb, r_fix,
-                        notional, seed1, nPaths, nSteps, yearly_payments, dim_n);
-    vol20[vol_idx][vol_idx] -= eps;
-
-    lmm2 = LMM_swaption(vol20, corrA, F20, t, Ta, Tb, r_fix,
-                        notional, seed1, nPaths, nSteps, yearly_payments, dim_n);
-    print("FD approx vol", vol_idx, " is ", (lmm1 - lmm2)/eps);
-    
-    print("Ratio vol ", 1.0 /( volRisk[vol_idx][vol_idx].adjoint()/double(nPaths) / ((lmm1 - lmm2)/eps) ) );
-
-    lmm1 = LMM_swaption(vol20, corrA, F20, t, Ta, Tb, r_fix + eps,
-                        notional, seed1, nPaths, nSteps, yearly_payments, dim_n);
-    //print("fixed ", r_fix );
-    print("FD approx fixed rate: ", (lmm1 - lmm2)/eps);
-    
-    print("Ratio r_fix ", fixedRateRisk.adjoint()/double(nPaths) / ((lmm1 - lmm2)/eps) );
-    
-    number::tape->clear();
-    
-    double blackBump = BlackCall( swap_rate20 + eps, swap_rate20, rebonato2);
-    print("Black bumped price ", disc2 * C * notional * blackBump );
-    print("Black r_fix deriv: ", disc2 * C * notional * (blackBump - black20)/eps);*/
-    
-    /* Test number of paths needed in pre sim:
-     vector<int> nPath_vec = {100, 200, 400, 800, 1000, 1500, 2000, 3000, 4000, 5000, 10000, 20000};
-    
-    for(auto & x : nPath_vec){
-        clock_t time1 = clock();
-        double bermudan_paths = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, 70000, x, nSteps_y, yearly_payments, dim_n);
-        printf("%11.10f,%11.10f\n", bermudan_paths, float( clock () - time1 )/ CLOCKS_PER_SEC );
-    }*/
-    
-    /* Test number of paths needed in main sim:
-     vector<int> nPath_vec = {30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000};
-    for(auto & x : nPath_vec){
-        clock_t time1 = clock();
-        double bermudan_paths = LMM_BermudaSwaption(vol20, corrA, F20, exTimes20, t, Ta, Tb, r_fix, notional, seed1, seed2, x, 3000, nSteps_y, yearly_payments, dim_n);
-        printf("%11.10f,%11.10f\n", bermudan_paths, float( clock () - time1 )/ CLOCKS_PER_SEC );
-    }*/
     
     return 0;
 }
