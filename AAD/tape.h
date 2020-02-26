@@ -25,8 +25,6 @@ class Tape {
     blockList<double, dataSize> myDerivs;
     blockList<double*, dataSize> myArgPtrs;
     
-    //char myPad[64];
-    
 public:
     // Put node on blocklist for nodes, derivatives on blocklist for derivs, adjoints on blocklist for adj.. 
     template <size_t N>

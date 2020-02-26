@@ -418,7 +418,7 @@ template<class T> T LMM_BermudaSwaptionAADChol(vector<vector<T>> & vol, vector<v
     //print(eigval);
     //print(P);
     vec largest_n_eigvals = eigval.tail_rows(dim_n);
-    print(eigval.tail_rows(6));
+    print(eigval);
     mat H_n = diagmat(largest_n_eigvals);
     mat L_n = sqrt(H_n);
     mat P_n = P.tail_cols(dim_n);

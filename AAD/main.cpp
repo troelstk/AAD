@@ -38,7 +38,6 @@ int main(int argc, const char * argv[]) {
     int seed1, nSteps, nPaths, nPaths_presim, M, dim_n, seed2, nSteps_y;
 
     seed1 = 59;
-    dim_n = 11;
     nSteps = 4;
     nPaths = 100;
     
@@ -142,6 +141,7 @@ int main(int argc, const char * argv[]) {
     /*vector<double> F20(int_Tb);
     for(int i = 0; i<Tb; ++i){
         F20[i] = 1.0/70.0*pow(i,0.05)+0.0469;
+        //F20[i] = 0.10;
     }
     print(F20);*/
     
@@ -170,8 +170,8 @@ int main(int argc, const char * argv[]) {
             //corrA[i][j] = 1.0/(double((abs(j-i)*abs(i-j)+8.0*Tb))/(8*Tb));
         }
         vol20[i][i] = Phi[i] ;
+        //vol20[i][i] = 0.2 ;
         //vol20[i][i] = 0.045*pow(i,0.2)*exp(-i*0.025) + 0.095 ;
-        //print(vol20[i][i]);
     }
     //print(corrA);
     
@@ -199,7 +199,7 @@ int main(int argc, const char * argv[]) {
     
     
     print("\nBermuda test: ");
-    nPaths_presim = 1000;
+    nPaths_presim = 2000;
     nPaths = 10000; // Main
     
     nSteps_y = 4;
@@ -225,12 +225,12 @@ int main(int argc, const char * argv[]) {
         for(int j = 1; j<i+1; j++){
             corrRisk[i][j] = cos( thetaRisk[i-1] - thetaRisk[j-1]);
             //corrRisk[i][j] = number(1.0/(double((abs(j-i)*abs(i-j)+8.0*Tb))/(8*Tb)));
-            
             //corrRisk[i][j] = 1.0;
             //print("row ", i, " col ", j, " ", corrRisk[i][j].value());
         }
         //volRisk[i][i] = number(0.045*pow(i,0.2)*exp(-i*0.025) + 0.095 );
         volRisk[i][i] = PhiRisk[i];
+        //volRisk[i][i] = number(0.2);
     }
     //print("other side");
     for(int i = 1; i<M; i++){
