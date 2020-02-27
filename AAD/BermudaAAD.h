@@ -240,20 +240,26 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
     vector<int> count_ex = vector<int>(exTimes.size(), 0);
     vector<double> ex_boundary = vector<double>(exTimes.size(), 100);
     
-    
+    // Set mark in memory
     number::tape->mark();
     for(int i = 0; i<nPaths; ++i){
+        // Rewind back to the mark after computation of each path
         number::tape->rewindToMark();
         int eta = 1;
         T swap_path(0.0);
+        // Loop over each exercise time of the swaption
         for(int t = 1; t<exTimes.size(); ++t ){
             int int_ExTime = (int)(exTimes[t]);
+            // Compute number of steps simulated between two exercise times
             int nSteps = nSteps_y * double(exTimes[t] - exTimes[t-1]);
             T swap_val(0.0);
             vector<T> lnF = log(initF);
+            // Simulate discretized path for nSteps
             for(int n = 0; n<nSteps; ++n) {
+                // Simulate gaussians
                 myRNG.nextG(gauss);
                 vector<T> gauss_corr = MatVecProd(lower, gauss);
+                // Simulate each of the forward rates relevant
                 for(int k = int_ExTime; k < int_Tb; ++k)
                 {
                     T sum(0.0);
@@ -264,30 +270,33 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
                     lnF[k] += vol[k][k]*tau*sum*dt - vol[k][k]*vol[k][k]/2.0*dt + sqDt*vol[k][k]*gauss_corr[k-int_Ta];
                 } // rates
             } // steps
-            // Now have F_k(T_alpha) for k=10,..,M
+            // Now have F_k(T_alpha) for k=T_i,..,T_b
             F = exp(lnF);
-
-            T floating_swap_rate;
-            floating_swap_rate = SR_from_F(F, yearly_payments, int_ExTime, int_Tb );
-
+            // Compute swap rate from F
+            T floating_swap_rate = T(SR_from_F(F, yearly_payments, int_ExTime, int_Tb ));
+            
+            // Compute value of entering into a payer swap at prevalent swap rate
             swap_val = disc * notional *
                 C_ab( F, yearly_payments, int_ExTime, int_ExTime, int_Tb) *
                 max(floating_swap_rate - r_fix, 0.0);
-
+            // Dicount swaption value along this path for exercise
             swap_path += double(eta) * swap_val;
-            
-            double EY2 = t < exTimes.size() - 1 ?
+            // Compute expected value of continuation
+            double EY = t < exTimes.size() - 1 ?
                 // continuation value - at last ex time the eta value computed below will never be used (so 0.0 could be anything), just avoid beta of last t
                 as_scalar(vec( { 1.0, double(floating_swap_rate), double(F[ int_ExTime ]) }).t() * beta.col(t)) : 0.0;
-
-            eta *= EY2 > swap_val ? 1 : 0; // 1 if continue, 0 if exercise
+            // Update eta process
+            eta *= EY > swap_val ? 1 : 0; // 1 if continue, 0 if exercise
         }
+        // Propagate this path back to mark
         swap_path.propagateToMark();
         
         end_result += swap_path;
     }
     print_DEBUG("Main forward took ", float(clock() - begin_time) / CLOCKS_PER_SEC, " to compute");
-
+    
+    // If check pointing was not used above, propagate all paths here:
+    //end_result.propagateToMark();
    
     number::propagateMarkToStart();
     

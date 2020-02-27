@@ -196,7 +196,7 @@ int main(int argc, const char * argv[]) {
     cout << "\n";
        
     /* Print all correlation adjoints */
-    /*print("Correlation Adjoints");
+    print("Correlation Adjoints");
     for(int i=9; i<Tb; ++i) { // i<Tb
         printf("%1.0d & ", i);
         for(int j=9; j<Tb; ++j) { // j<i+1
@@ -209,7 +209,7 @@ int main(int argc, const char * argv[]) {
            }
        }
        cout << "\n";
-    }*/
+    }
     
     //number::tape->clear();
     
