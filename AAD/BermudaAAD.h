@@ -89,8 +89,8 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
 
     B_num = MatMatProd(P_num, L_num);
     
-    vector<vector<T>> A = MatMatProd(MatMatProd(transp(Pert), cov_s), Pert);
-    
+    //vector<vector<T>> A = MatMatProd(MatMatProd(transp(Pert), cov_s), Pert);
+    vector<vector<T>> A = cov_s;
     lower = CholMod(A, B_num);
     
 
@@ -279,12 +279,16 @@ template<class T> T LMM_BermudaSwaptionAAD(vector<vector<T>> & vol, vector<vecto
             swap_val = disc * notional *
                 C_ab( F, yearly_payments, int_ExTime, int_ExTime, int_Tb) *
                 max(floating_swap_rate - r_fix, 0.0);
-            // Dicount swaption value along this path for exercise
-            swap_path += double(eta) * swap_val;
+            
             // Compute expected value of continuation
             double EY = t < exTimes.size() - 1 ?
                 // continuation value - at last ex time the eta value computed below will never be used (so 0.0 could be anything), just avoid beta of last t
                 as_scalar(vec( { 1.0, double(floating_swap_rate), double(F[ int_ExTime ]) }).t() * beta.col(t)) : 0.0;
+            
+            double eta2 = EY < swap_val ? 1.0 : 0.0; // 1 if exercise
+            // Dicount swaption value along this path for exercise
+            swap_path += double(eta) * swap_val * eta2;
+            
             // Update eta process
             eta *= EY > swap_val ? 1 : 0; // 1 if continue, 0 if exercise
         }

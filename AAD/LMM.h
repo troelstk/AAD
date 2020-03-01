@@ -104,9 +104,9 @@ template<class T> T LMM_swaption(vector<vector<T>> & vol, vector<vector<T>> & co
 
         res += C_ab( F, yearly_payments, int_Ta, int_Ta, int_Tb) * max(floating_swap_rate - r_fix, 0.0);
     }
-    print("mean is ", mean(exp(lnRates)));
+    /*print("mean is ", mean(exp(lnRates)));
     print("kurtosis is ", kurtosis(lnRates));
-    print("skew is ", skew(lnRates));
+    print("skew is ", skew(lnRates));*/
     
     // Discounting back to time t:
     T disc;

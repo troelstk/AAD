@@ -10,7 +10,7 @@
 #define utilities_h
 #include <string>
 #include "number.h"
-static bool debug_var = true; // Set to true if print_DEBUG should be enabled (prints timings)
+static bool debug_var = false; // Set to true if print_DEBUG should be enabled (prints timings)
 using namespace std;
 
 // Prints the values of a vector in one row
